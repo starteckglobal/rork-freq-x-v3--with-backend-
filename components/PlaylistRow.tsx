@@ -36,7 +36,6 @@ const PlaylistRow = React.memo(function PlaylistRow({ title, playlists }: Playli
         alwaysBounceHorizontal={Platform.OS === 'ios'}
         scrollEnabled={true}
         canCancelContentTouches={true}
-        delayContentTouches={false}
       >
         {playlists.map((playlist, index) => (
           <PlaylistCard 
