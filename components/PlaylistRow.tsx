@@ -27,9 +27,22 @@ const PlaylistRow = React.memo(function PlaylistRow({ title, playlists }: Playli
         snapToInterval={Platform.OS === 'ios' ? 172 : undefined}
         snapToAlignment="start"
         directionalLockEnabled={true}
+        bounces={Platform.OS === 'ios'}
+        overScrollMode={Platform.OS === 'android' ? 'never' : 'auto'}
+        removeClippedSubviews={false}
+        keyboardShouldPersistTaps="handled"
+        persistentScrollbar={false}
+        pagingEnabled={false}
+        alwaysBounceHorizontal={Platform.OS === 'ios'}
+        scrollEnabled={true}
+        canCancelContentTouches={true}
+        delayContentTouches={false}
       >
-        {playlists.map((playlist) => (
-          <PlaylistCard key={playlist.id} playlist={playlist} />
+        {playlists.map((playlist, index) => (
+          <PlaylistCard 
+            key={`playlist-${playlist.id}-${index}`} 
+            playlist={playlist} 
+          />
         ))}
       </ScrollView>
     </View>
@@ -41,6 +54,7 @@ export default PlaylistRow;
 const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
+    minHeight: 220, // Ensure consistent height
   },
   title: {
     color: colors.text,
@@ -51,5 +65,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingRight: 16,
     paddingLeft: 4,
+    minHeight: 180, // Ensure scroll content has minimum height
   },
 });

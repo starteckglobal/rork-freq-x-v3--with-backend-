@@ -28,16 +28,34 @@ export default function HomeScreen() {
   const router = useRouter();
   const [showUploadModal, setShowUploadModal] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0);
+  const [forceUpdate, setForceUpdate] = React.useState(0);
   const insets = useSafeAreaInsets();
   
   // Enable live notifications simulation
   useNotificationSimulator();
   
+  // Additional force update for mobile to ensure changes are reflected
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      const interval = setInterval(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 2000); // Update every 2 seconds on mobile
+      
+      return () => clearInterval(interval);
+    }
+  }, []);
+  
   // Force refresh on focus to ensure mobile app gets latest changes
   useFocusEffect(
     React.useCallback(() => {
+      // Always refresh on focus for both web and mobile to ensure consistency
+      setRefreshKey(prev => prev + 1);
+      
+      // Force a small delay to ensure components re-render properly on mobile
       if (Platform.OS !== 'web') {
-        setRefreshKey(prev => prev + 1);
+        setTimeout(() => {
+          setRefreshKey(prev => prev + 1);
+        }, 100);
       }
     }, [])
   );
@@ -168,9 +186,13 @@ export default function HomeScreen() {
         nestedScrollEnabled={true}
         scrollEventThrottle={16}
         keyboardShouldPersistTaps="handled"
+        bounces={Platform.OS === 'ios'}
+        overScrollMode={Platform.OS === 'android' ? 'never' : 'auto'}
+        removeClippedSubviews={false}
+        directionalLockEnabled={false}
       >
         <PlaylistRow 
-          key={`featured-playlists-${refreshKey}`} 
+          key={`featured-playlists-${refreshKey}-${forceUpdate}-${Platform.OS}`} 
           title="Featured Playlists" 
           playlists={featuredPlaylists} 
         />
