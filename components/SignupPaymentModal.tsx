@@ -179,7 +179,7 @@ export default function SignupPaymentModal({ visible, onClose, selectedPlan }: S
 
         // Simulate payment processing (in real app, you'd use Stripe Elements)
         const paymentResult = await confirmPaymentMutation.mutateAsync({
-          paymentIntentId: paymentIntentResult.paymentIntentId,
+          paymentIntentId: paymentIntentResult.paymentIntentId || '',
           paymentMethodData: {
             cardNumber: formData.cardNumber.replace(/\s/g, ''),
             expiryMonth: formData.expiryDate.split('/')[0],

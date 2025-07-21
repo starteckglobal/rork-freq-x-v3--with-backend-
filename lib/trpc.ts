@@ -43,10 +43,15 @@ export const trpcClient = createTRPCClient<AppRouter>({
       },
       fetch: async (url, options) => {
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          
           const response = await fetch(url, {
             ...options,
-            timeout: 10000, // 10 second timeout
+            signal: controller.signal,
           });
+          
+          clearTimeout(timeoutId);
           return response;
         } catch (error) {
           console.error('Network request failed:', error);
