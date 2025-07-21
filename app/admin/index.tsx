@@ -16,7 +16,7 @@ import { trpc } from '@/lib/trpc';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Lock, User, ArrowLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { freqLogoUrl, freqLogoFallback } from '@/constants/images';
+import FreqLogo from '@/components/FreqLogo';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -120,11 +120,7 @@ export default function AdminLogin() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Image 
-                source={{ uri: freqLogoUrl }}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+              <FreqLogo size={60} />
             </View>
             <Text style={styles.title}>Moderator Dashboard</Text>
             <Text style={styles.subtitle}>Admin Access Required</Text>

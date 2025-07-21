@@ -13,7 +13,7 @@ import { colors } from '@/constants/colors';
 import { usePlayerStore } from '@/store/player-store';
 import { useUserStore } from '@/store/user-store';
 import { useNotificationsStore } from '@/store/notifications-store';
-import { freqLogoUrl } from '@/constants/images';
+import FreqLogo from '@/components/FreqLogo';
 import { UserPlus, Upload, MessageCircle, Bell } from 'lucide-react-native';
 import LoginModal from '@/components/LoginModal';
 import UploadTrackModal from '@/components/UploadTrackModal';
