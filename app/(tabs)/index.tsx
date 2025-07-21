@@ -113,10 +113,9 @@ export default function HomeScreen() {
         headerLeft: () => (
           <View style={styles.headerLeftContainer}>
             <TouchableOpacity onPress={() => router.push('/')} style={styles.logoContainer}>
-              <Image 
-                source={{ uri: freqLogoUrl }} 
+              <FreqLogo 
+                size={40}
                 style={styles.logo}
-                resizeMode="contain"
               />
               <Text style={styles.logoText}>FREQ</Text>
             </TouchableOpacity>
