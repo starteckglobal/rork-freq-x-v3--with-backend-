@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { trpc } from '@/lib/trpc';
@@ -25,8 +26,10 @@ import {
   Shield,
   TrendingUp,
   Home,
+  ArrowLeft,
 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { freqLogoUrl } from '@/constants/images';
 
 interface DashboardStats {
   totalUsers: number;
@@ -126,6 +129,23 @@ export default function AdminDashboard() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => {
+          Alert.alert(
+            'Exit Admin Panel',
+            'Are you sure you want to exit the admin panel?',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Exit', onPress: () => router.push('/(tabs)') }
+            ]
+          );
+        }}
+      >
+        <ArrowLeft size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -147,14 +167,13 @@ export default function AdminDashboard() {
             }}
             style={styles.freqLogoButton}
           >
-            <LinearGradient
-              colors={['#8B5CF6', '#06B6D4']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.freqLogo}
-            >
-              <Text style={styles.freqLogoText}>FREQ</Text>
-            </LinearGradient>
+            <View style={styles.freqLogo}>
+              <Image 
+                source={{ uri: freqLogoUrl }}
+                style={styles.freqLogoImage}
+                resizeMode="contain"
+              />
+            </View>
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.welcomeText}>Welcome back,</Text>
@@ -287,6 +306,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 24,
+    zIndex: 10,
+    padding: 8,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -315,6 +341,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#1F2937',
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  freqLogoImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
   },
   freqLogoText: {
     fontSize: 14,

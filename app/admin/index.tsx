@@ -9,17 +9,42 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { trpc } from '@/lib/trpc';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Lock, User } from 'lucide-react-native';
+import { Lock, User, ArrowLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { freqLogoUrl } from '@/constants/images';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: async (data) => {
+      try {
+        await AsyncStorage.setItem('admin_token', data.token);
+        await AsyncStorage.setItem('admin_user', JSON.stringify(data.user));
+        
+        setIsLoading(false);
+        Alert.alert('Success', 'Welcome to FREQ Moderator Dashboard', [
+          { text: 'Continue', onPress: () => router.replace('/admin/dashboard') }
+        ]);
+      } catch (error) {
+        setIsLoading(false);
+        Alert.alert('Error', 'Failed to save login data. Please try again.');
+        console.error('Storage error:', error);
+      }
+    },
+    onError: (error) => {
+      setIsLoading(false);
+      Alert.alert('Access Denied', error.message || 'Invalid credentials. Please check your username and password.');
+      console.error('Login error:', error);
+    }
+  });
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -30,38 +55,28 @@ export default function AdminLogin() {
     setIsLoading(true);
     
     try {
-      // Single authentication check with proper error handling
-      if (username.trim() === 'masterfreq' && password === 'freq2007') {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const adminData = {
-          username: 'masterfreq',
-          role: 'super_admin',
-          id: 'admin-1'
-        };
-        
-        await AsyncStorage.setItem('admin_token', 'admin-token-123');
-        await AsyncStorage.setItem('admin_user', JSON.stringify(adminData));
-        
-        setIsLoading(false);
-        Alert.alert('Success', 'Welcome to FREQ Moderator Dashboard', [
-          { text: 'Continue', onPress: () => router.replace('/admin/dashboard') }
-        ]);
-      } else {
-        setIsLoading(false);
-        Alert.alert('Access Denied', 'Invalid credentials. Please check your username and password.');
-      }
+      // Use tRPC backend for authentication
+      await loginMutation.mutateAsync({
+        username: username.trim(),
+        password: password
+      });
     } catch (error) {
-      setIsLoading(false);
-      Alert.alert('Error', 'Login failed. Please try again.');
-      console.error('Login error:', error);
+      // Error handling is done in the mutation callbacks
+      console.error('Login attempt failed:', error);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
+      
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <ArrowLeft size={24} color="#FFFFFF" />
+      </TouchableOpacity>
       
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -70,14 +85,13 @@ export default function AdminLogin() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <LinearGradient
-              colors={['#8B5CF6', '#06B6D4']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoContainer}
-            >
-              <Text style={styles.logoText}>FREQ</Text>
-            </LinearGradient>
+            <View style={styles.logoContainer}>
+              <Image 
+                source={{ uri: freqLogoUrl }}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.title}>Moderator Dashboard</Text>
             <Text style={styles.subtitle}>Admin Access Required</Text>
           </View>
@@ -145,6 +159,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 24,
+    zIndex: 10,
+    padding: 8,
+  },
   keyboardView: {
     flex: 1,
   },
@@ -158,12 +179,20 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logoContainer: {
-    width: 80,
-    height: 80,
+    width: 120,
+    height: 120,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    backgroundColor: '#1F2937',
+    borderWidth: 2,
+    borderColor: '#374151',
+  },
+  logoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 16,
   },
   logoText: {
     fontSize: 24,
