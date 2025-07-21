@@ -18,7 +18,7 @@ const PlaylistRow = React.memo(function PlaylistRow({ title, playlists }: Playli
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
       <ScrollView 
-        horizontal
+        horizontal={true}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         nestedScrollEnabled={true}
@@ -35,7 +35,6 @@ const PlaylistRow = React.memo(function PlaylistRow({ title, playlists }: Playli
         pagingEnabled={false}
         alwaysBounceHorizontal={Platform.OS === 'ios'}
         scrollEnabled={true}
-        canCancelContentTouches={true}
       >
         {playlists.map((playlist, index) => (
           <PlaylistCard 

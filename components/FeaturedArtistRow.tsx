@@ -62,7 +62,7 @@ const FeaturedArtistRow = React.memo(function FeaturedArtistRow({ title, artists
         />
         <ScrollView 
           style={styles.scrollView}
-          horizontal
+          horizontal={true}
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           nestedScrollEnabled={true}
@@ -79,7 +79,6 @@ const FeaturedArtistRow = React.memo(function FeaturedArtistRow({ title, artists
           pagingEnabled={false}
           alwaysBounceHorizontal={Platform.OS === 'ios'}
           scrollEnabled={true}
-          canCancelContentTouches={false}
         >
           {artists.map((artist, index) => (
             <FeaturedArtistCard 
@@ -99,8 +98,8 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
     minHeight: 200,
-    marginHorizontal: -16,
-    paddingHorizontal: 16,
+    marginHorizontal: -32,
+    paddingHorizontal: 32,
   },
   title: {
     color: colors.text,
@@ -115,11 +114,11 @@ const styles = StyleSheet.create({
   },
   glow: {
     position: 'absolute',
-    top: -8,
-    left: -16,
-    right: -16,
-    bottom: -8,
-    height: 176,
+    top: 0,
+    left: -32,
+    right: -32,
+    bottom: 0,
+    height: 160,
     backgroundColor: '#2B4BF2',
     zIndex: 0,
   },
