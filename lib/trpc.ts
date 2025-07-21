@@ -9,8 +9,9 @@ export const trpc = createTRPCReact<AppRouter>();
 const getBaseUrl = () => {
   // Always prioritize environment variable if set
   if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
-    console.log('Using env base URL:', process.env.EXPO_PUBLIC_RORK_API_BASE_URL);
-    return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+    const url = process.env.EXPO_PUBLIC_RORK_API_BASE_URL.replace(/\/+$/, ''); // Remove trailing slashes
+    console.log('Using env base URL:', url);
+    return url;
   }
 
   // For development, use localhost
@@ -68,6 +69,21 @@ export const trpcClient = createTRPCClient<AppRouter>({
         const baseUrl = getBaseUrl();
         console.log('Making request to:', url);
         console.log('Base URL:', baseUrl);
+        
+        // First, test basic connectivity
+        try {
+          const healthCheck = await fetch(`${baseUrl}/health`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(3000),
+          });
+          
+          if (!healthCheck.ok) {
+            throw new Error(`Backend server returned ${healthCheck.status}`);
+          }
+        } catch (healthError: any) {
+          console.error('Health check failed:', healthError.message);
+          throw new Error('Cannot connect to backend server. Please ensure the server is running.');
+        }
         
         // Retry logic for network requests
         const maxRetries = 2;

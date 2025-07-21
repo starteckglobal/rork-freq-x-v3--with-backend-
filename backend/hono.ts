@@ -9,35 +9,7 @@ const app = new Hono();
 
 // Enable CORS for all routes with more permissive settings for development
 app.use("*", cors({
-  origin: (origin, c) => {
-    console.log('CORS origin:', origin);
-    
-    // Allow all origins in development
-    if (process.env.NODE_ENV === 'development') {
-      return origin || '*';
-    }
-    
-    // In production, specify allowed origins
-    const allowedOrigins = [
-      'http://localhost:8081', 
-      'http://localhost:19006', 
-      'http://127.0.0.1:8081', 
-      'http://127.0.0.1:19006', 
-      'http://localhost:3000'
-    ];
-    
-    // Also allow tunnel URLs (they typically contain .ngrok.io or similar)
-    if (origin && (origin.includes('.ngrok.io') || origin.includes('.tunnel.') || origin.includes('exp://') || origin.includes('.expo.dev'))) {
-      return origin;
-    }
-    
-    if (allowedOrigins.includes(origin || '')) {
-      return origin || '*';
-    }
-    
-    // Default to allowing all origins in development
-    return '*';
-  },
+  origin: true, // Allow all origins in development
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'x-trpc-source', 'x-requested-with'],
   credentials: true,
