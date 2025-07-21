@@ -64,12 +64,16 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
       
       if (error.message?.includes('Failed to fetch') || error.message?.includes('Network request failed')) {
         errorMessage = 'Cannot connect to server';
-        troubleshootingTips = '\n\nTroubleshooting:\n• Ensure backend is running: bun run server.ts\n• Check if port 8081 is available\n• For mobile: Update .env.local with your computer\'s IP address';
+        troubleshootingTips = '\n\n🔧 Quick Fix:\n• Run: node fix-network.js\n• Or manually: bun run server.ts\n\n📱 For mobile:\n• Update .env.local with your IP\n• Run: node get-ip.js to find IP';
       } else if (error.message?.includes('UNAUTHORIZED') || error.message?.includes('Invalid credentials')) {
-        errorMessage = 'Invalid username or password';
-        troubleshootingTips = '\n\nDefault credentials:\nUsername: admin\nPassword: admin123';
+        errorMessage = 'Invalid credentials';
+        troubleshootingTips = '\n\n🔑 Default login:\nUsername: admin\nPassword: admin123';
+      } else if (error.message?.includes('timeout') || error.message?.includes('timed out')) {
+        errorMessage = 'Connection timeout';
+        troubleshootingTips = '\n\n⏰ Server may be slow to respond:\n• Check backend logs\n• Restart: bun run server.ts\n• Run: node diagnose-network.js';
       } else {
         errorMessage = error.message || 'An unexpected error occurred';
+        troubleshootingTips = '\n\n🔍 Debug steps:\n• Run: node diagnose-network.js\n• Check backend logs\n• Verify .env.local settings';
       }
       
       Alert.alert('Login Error', errorMessage + troubleshootingTips);

@@ -31,7 +31,7 @@ app.use("*", cors({
       return origin;
     }
     
-    return allowedOrigins.includes(origin || '') ? origin : null;
+    return allowedOrigins.includes(origin || '') ? (origin || '*') : '*';
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'x-trpc-source', 'x-requested-with'],
