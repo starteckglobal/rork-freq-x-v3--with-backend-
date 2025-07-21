@@ -34,8 +34,7 @@ import {
 import { colors } from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { usePlayerStore } from '@/store/player-store';
-import { defaultAvatarUri } from '@/constants/images';
-import FreqLogo from '@/components/FreqLogo';
+import { defaultAvatarUri, freqLogoUrl } from '@/constants/images';
 import MiniPlayer from '@/components/MiniPlayer';
 import LoginModal from '@/components/LoginModal';
 import UploadTrackModal from '@/components/UploadTrackModal';
@@ -173,9 +172,10 @@ export default function ProfileScreen() {
           title: 'Profile',
           headerLeft: () => (
             <TouchableOpacity onPress={handleLogoPress}>
-              <FreqLogo 
-                size={32}
+              <Image 
+                source={{ uri: freqLogoUrl }} 
                 style={styles.headerLogo}
+                resizeMode="contain"
               />
             </TouchableOpacity>
           ),
@@ -221,9 +221,10 @@ export default function ProfileScreen() {
         title: 'Profile',
         headerLeft: () => (
           <TouchableOpacity onPress={handleLogoPress}>
-            <FreqLogo 
-              size={32}
+            <Image 
+              source={{ uri: freqLogoUrl }} 
               style={styles.headerLogo}
+              resizeMode="contain"
             />
           </TouchableOpacity>
         ),

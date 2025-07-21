@@ -13,7 +13,7 @@ import { colors } from '@/constants/colors';
 import { usePlayerStore } from '@/store/player-store';
 import { useUserStore } from '@/store/user-store';
 import { useNotificationsStore } from '@/store/notifications-store';
-import FreqLogo from '@/components/FreqLogo';
+import { freqLogoUrl } from '@/constants/images';
 import { UserPlus, Upload, MessageCircle, Bell } from 'lucide-react-native';
 import LoginModal from '@/components/LoginModal';
 import UploadTrackModal from '@/components/UploadTrackModal';
@@ -113,9 +113,10 @@ export default function HomeScreen() {
         headerLeft: () => (
           <View style={styles.headerLeftContainer}>
             <TouchableOpacity onPress={() => router.push('/')} style={styles.logoContainer}>
-              <FreqLogo 
-                size={40}
+              <Image 
+                source={{ uri: freqLogoUrl }} 
                 style={styles.logo}
+                resizeMode="contain"
               />
               <Text style={styles.logoText}>FREQ</Text>
             </TouchableOpacity>
