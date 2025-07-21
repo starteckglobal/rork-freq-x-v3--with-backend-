@@ -22,7 +22,7 @@ import { tracks } from '@/mocks/tracks';
 import { users } from '@/mocks/users';
 import { colors } from '@/constants/colors';
 import { usePlayerStore } from '@/store/player-store';
-import { freqLogoUrl } from '@/constants/images';
+import FreqLogo from '@/components/FreqLogo';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { analyticsEventBus } from '@/services/analytics-event-bus';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
