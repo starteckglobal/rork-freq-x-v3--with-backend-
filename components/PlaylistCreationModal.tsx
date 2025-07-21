@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Modal, 
   View, 
@@ -38,6 +38,8 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
   const [isCreating, setIsCreating] = useState(false);
   
   const { createPlaylist } = useUserStore();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const nameInputRef = useRef<TextInput>(null);
   
   // Request camera permissions
   const requestCameraPermission = async () => {
@@ -265,29 +267,30 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
       animationType="slide"
       onRequestClose={handleCancel}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Create Playlist</Text>
-            <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
-              <X size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView 
-            style={styles.form} 
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ flexGrow: 1 }}
-            nestedScrollEnabled={Platform.OS === 'android'}
-            removeClippedSubviews={Platform.OS === 'android'}
-            scrollEnabled={true}
-            persistentScrollbar={Platform.OS === 'android'}
-          >
+      <View style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidingView}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 50}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.header}>
+              <Text style={styles.title}>Create Playlist</Text>
+              <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
+                <X size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView 
+              ref={scrollViewRef}
+              style={styles.form} 
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.scrollContent}
+              keyboardDismissMode="interactive"
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              automaticallyAdjustContentInsets={false}
+            >
             {/* Cover Art Section */}
             <Text style={styles.label}>Cover Art (optional)</Text>
             <View style={styles.coverArtSection}>
@@ -321,6 +324,7 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
             
             <Text style={styles.label}>Name *</Text>
             <TextInput
+              ref={nameInputRef}
               style={[styles.input, nameError ? styles.inputError : null]}
               placeholder="Enter playlist name"
               placeholderTextColor={colors.textSecondary}
@@ -330,6 +334,12 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
                 if (text.trim()) {
                   setNameError('');
                 }
+              }}
+              onFocus={() => {
+                // Scroll to make input visible when keyboard appears
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 100, animated: true });
+                }, 100);
               }}
               autoFocus
               maxLength={50}
@@ -343,6 +353,12 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
               placeholderTextColor={colors.textSecondary}
               value={description}
               onChangeText={setDescription}
+              onFocus={() => {
+                // Scroll to make input visible when keyboard appears
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+                }, 100);
+              }}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -397,8 +413,9 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -406,15 +423,22 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 20,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   modalContent: {
     width: '100%',
     maxWidth: Math.min(width * 0.9, 500),
-    maxHeight: height * 0.8,
+    minHeight: height * 0.5,
+    maxHeight: height * 0.85,
     backgroundColor: colors.card,
     borderRadius: 12,
     overflow: 'hidden',
@@ -447,8 +471,12 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   form: {
-    padding: 16,
     flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    flexGrow: 1,
+    paddingBottom: 20,
   },
   label: {
     fontSize: 16,
