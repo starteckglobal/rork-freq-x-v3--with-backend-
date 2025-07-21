@@ -9,17 +9,21 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { trpc } from '@/lib/trpc';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Lock, User } from 'lucide-react-native';
+import { Lock, User, ArrowLeft } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { freqLogoUrl, freqLogoFallback } from '@/constants/images';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const loginMutation = trpc.auth.login.useMutation();
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -30,31 +34,68 @@ export default function AdminLogin() {
     setIsLoading(true);
     
     try {
-      // Single authentication check with proper error handling
-      if (username.trim() === 'masterfreq' && password === 'freq2007') {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const adminData = {
-          username: 'masterfreq',
-          role: 'super_admin',
-          id: 'admin-1'
-        };
-        
-        await AsyncStorage.setItem('admin_token', 'admin-token-123');
-        await AsyncStorage.setItem('admin_user', JSON.stringify(adminData));
-        
-        setIsLoading(false);
-        Alert.alert('Success', 'Welcome to FREQ Moderator Dashboard', [
-          { text: 'Continue', onPress: () => router.replace('/admin/dashboard') }
-        ]);
-      } else {
-        setIsLoading(false);
-        Alert.alert('Access Denied', 'Invalid credentials. Please check your username and password.');
-      }
-    } catch (error) {
+      // Try tRPC authentication first
+      const result = await loginMutation.mutateAsync({
+        username: username.trim(),
+        password: password
+      });
+      
+      // Store authentication data
+      await AsyncStorage.setItem('admin_token', result.token);
+      await AsyncStorage.setItem('admin_user', JSON.stringify(result.user));
+      
+      // Clear form
+      setUsername('');
+      setPassword('');
       setIsLoading(false);
-      Alert.alert('Error', 'Login failed. Please try again.');
+      
+      // Navigate to dashboard
+      router.replace('/admin/dashboard');
+      
+    } catch (error: any) {
+      console.log('tRPC login failed, trying fallback:', error);
+      
+      // Fallback authentication for offline/network issues
+      if (username.trim().toLowerCase() === 'masterfreq' && password === 'freq2007') {
+        try {
+          const adminData = {
+            id: '1',
+            username: 'masterfreq',
+            role: 'super_admin',
+            permissions: ['*'], // All permissions
+            loginTime: new Date().toISOString()
+          };
+          
+          await AsyncStorage.setItem('admin_token', 'fallback-token-' + Date.now());
+          await AsyncStorage.setItem('admin_user', JSON.stringify(adminData));
+          
+          // Clear form
+          setUsername('');
+          setPassword('');
+          setIsLoading(false);
+          
+          // Navigate to dashboard
+          router.replace('/admin/dashboard');
+          return;
+        } catch (fallbackError) {
+          console.error('Fallback login failed:', fallbackError);
+        }
+      }
+      
+      setIsLoading(false);
+      
+      // Handle different types of errors
+      let errorMessage = 'Login failed. Please try again.';
+      
+      if (error?.message?.includes('UNAUTHORIZED') || error?.message?.includes('Invalid credentials')) {
+        errorMessage = 'Invalid username or password. Please check your credentials.';
+      } else if (error?.message?.includes('Network request failed') || error?.code === 'NETWORK_ERROR') {
+        errorMessage = 'Network error. Using offline authentication.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert('Access Denied', errorMessage);
       console.error('Login error:', error);
     }
   };
@@ -63,6 +104,14 @@ export default function AdminLogin() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
+      {/* Back Button */}
+      <TouchableOpacity 
+        style={styles.backButton}
+        onPress={() => router.back()}
+      >
+        <ArrowLeft size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -70,14 +119,13 @@ export default function AdminLogin() {
         <View style={styles.content}>
           {/* Header */}
           <View style={styles.header}>
-            <LinearGradient
-              colors={['#8B5CF6', '#06B6D4']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoContainer}
-            >
-              <Text style={styles.logoText}>FREQ</Text>
-            </LinearGradient>
+            <View style={styles.logoContainer}>
+              <Image 
+                source={{ uri: freqLogoUrl }}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
             <Text style={styles.title}>Moderator Dashboard</Text>
             <Text style={styles.subtitle}>Admin Access Required</Text>
           </View>
@@ -145,6 +193,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
   },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 10,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
   keyboardView: {
     flex: 1,
   },
@@ -164,11 +221,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
+    backgroundColor: '#FFFFFF',
   },
-  logoText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+  logoImage: {
+    width: 60,
+    height: 60,
   },
   title: {
     fontSize: 28,

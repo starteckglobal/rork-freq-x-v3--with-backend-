@@ -8,10 +8,12 @@ import {
   SafeAreaView,
   Alert,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { trpc } from '@/lib/trpc';
 import { LinearGradient } from 'expo-linear-gradient';
+import { freqLogoUrl } from '@/constants/images';
 import {
   Users,
   FileText,
@@ -52,13 +54,22 @@ export default function AdminDashboard() {
 
   const loadAdminUser = async () => {
     try {
+      const token = await AsyncStorage.getItem('admin_token');
       const userData = await AsyncStorage.getItem('admin_user');
-      if (userData) {
-        setAdminUser(JSON.parse(userData));
+      
+      if (token && userData) {
+        const user = JSON.parse(userData);
+        setAdminUser(user);
       } else {
+        // Clear any partial data and redirect
+        await AsyncStorage.removeItem('admin_token');
+        await AsyncStorage.removeItem('admin_user');
         router.replace('/admin');
       }
     } catch (error) {
+      console.error('Error loading admin user:', error);
+      await AsyncStorage.removeItem('admin_token');
+      await AsyncStorage.removeItem('admin_user');
       router.replace('/admin');
     }
   };
@@ -147,14 +158,13 @@ export default function AdminDashboard() {
             }}
             style={styles.freqLogoButton}
           >
-            <LinearGradient
-              colors={['#8B5CF6', '#06B6D4']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.freqLogo}
-            >
-              <Text style={styles.freqLogoText}>FREQ</Text>
-            </LinearGradient>
+            <View style={styles.freqLogo}>
+              <Image 
+                source={{ uri: freqLogoUrl }}
+                style={styles.freqLogoImage}
+                resizeMode="contain"
+              />
+            </View>
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.welcomeText}>Welcome back,</Text>
@@ -315,11 +325,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  freqLogoText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+  freqLogoImage: {
+    width: 30,
+    height: 30,
   },
   headerCenter: {
     flex: 1,
