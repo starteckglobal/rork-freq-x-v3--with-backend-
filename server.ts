@@ -10,10 +10,10 @@ function getLocalIPAddress() {
   for (const name of Object.keys(networkInterfaces)) {
     const networkInterface = networkInterfaces[name];
     if (networkInterface) {
-      for (const iface of networkInterface) {
+      for (const netInterface of networkInterface) {
         // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-        if (iface.family === 'IPv4' && !iface.internal) {
-          return iface.address;
+        if (netInterface.family === 'IPv4' && !netInterface.internal) {
+          return netInterface.address;
         }
       }
     }

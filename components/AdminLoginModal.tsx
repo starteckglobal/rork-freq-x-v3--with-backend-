@@ -28,6 +28,23 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
   const router = useRouter();
   const loginMutation = trpc.auth.login.useMutation();
 
+  const testConnectivity = async (baseUrl: string): Promise<boolean> => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(`${baseUrl}/health`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch {
+      return false;
+    }
+  };
+
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       Alert.alert('Error', 'Please enter both username and password');
@@ -40,6 +57,11 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
       // First test basic connectivity
       const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'http://localhost:8081';
       console.log('Testing connectivity to:', baseUrl);
+      
+      const isConnected = await testConnectivity(baseUrl);
+      if (!isConnected) {
+        throw new Error('Cannot connect to backend server. Please ensure the server is running.');
+      }
       
       const result = await loginMutation.mutateAsync({
         username: username.trim(),
@@ -62,18 +84,18 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
       let errorMessage = 'Login failed';
       let troubleshootingTips = '';
       
-      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network request failed')) {
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network request failed') || error.message?.includes('Cannot connect to backend')) {
         errorMessage = 'Cannot connect to server';
-        troubleshootingTips = '\n\n🔧 Quick Fix:\n• Run: node fix-network.js\n• Or manually: bun run server.ts\n\n📱 For mobile:\n• Update .env.local with your IP\n• Run: node get-ip.js to find IP';
+        troubleshootingTips = '\n\n🔧 Quick Fix:\n• Run: node network-fix-complete.js\n• Or manually: bun run server.ts\n\n📱 For mobile:\n• Update .env.local with your IP\n• Backend should be on: http://YOUR_IP:8081';
       } else if (error.message?.includes('UNAUTHORIZED') || error.message?.includes('Invalid credentials')) {
         errorMessage = 'Invalid credentials';
         troubleshootingTips = '\n\n🔑 Default login:\nUsername: admin\nPassword: admin123';
       } else if (error.message?.includes('timeout') || error.message?.includes('timed out')) {
         errorMessage = 'Connection timeout';
-        troubleshootingTips = '\n\n⏰ Server may be slow to respond:\n• Check backend logs\n• Restart: bun run server.ts\n• Run: node diagnose-network.js';
+        troubleshootingTips = '\n\n⏰ Server may be slow to respond:\n• Check backend logs\n• Restart: bun run server.ts\n• Run: node network-fix-complete.js';
       } else {
         errorMessage = error.message || 'An unexpected error occurred';
-        troubleshootingTips = '\n\n🔍 Debug steps:\n• Run: node diagnose-network.js\n• Check backend logs\n• Verify .env.local settings';
+        troubleshootingTips = '\n\n🔍 Debug steps:\n• Run: node network-fix-complete.js\n• Check backend logs\n• Verify .env.local settings';
       }
       
       Alert.alert('Login Error', errorMessage + troubleshootingTips);

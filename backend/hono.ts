@@ -31,7 +31,12 @@ app.use("*", cors({
       return origin;
     }
     
-    return allowedOrigins.includes(origin || '') ? (origin || '*') : '*';
+    if (allowedOrigins.includes(origin || '')) {
+      return origin || '*';
+    }
+    
+    // Default to allowing all origins in development
+    return '*';
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'x-trpc-source', 'x-requested-with'],
@@ -65,6 +70,19 @@ app.get("/", (c) => {
 // Health check for TRPC
 app.get("/trpc", (c) => {
   return c.json({ status: "ok", message: "TRPC endpoint is available" });
+});
+
+// Health check endpoint
+app.get("/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    message: "Backend is running",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      trpc: "/api/trpc",
+      health: "/api/health"
+    }
+  });
 });
 
 // Test endpoint for payment system

@@ -35,12 +35,19 @@ const getBaseUrl = () => {
 // Create a health check function
 const checkServerHealth = async (baseUrl: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${baseUrl}/api/health`, {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${baseUrl}/health`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
     return response.ok;
-  } catch {
+  } catch (error) {
+    console.log('Health check failed:', error);
     return false;
   }
 };
@@ -58,54 +65,77 @@ export const trpcClient = createTRPCClient<AppRouter>({
         };
       },
       fetch: async (url, options) => {
-        try {
-          console.log('Making request to:', url);
-          const baseUrl = getBaseUrl();
-          console.log('Base URL:', baseUrl);
-          
-          // Quick health check first
-          const isHealthy = await checkServerHealth(baseUrl);
-          if (!isHealthy) {
-            console.warn('Server health check failed');
+        const baseUrl = getBaseUrl();
+        console.log('Making request to:', url);
+        console.log('Base URL:', baseUrl);
+        
+        // Retry logic for network requests
+        const maxRetries = 2;
+        let lastError: any;
+        
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            if (attempt > 0) {
+              console.log(`Retry attempt ${attempt}/${maxRetries}`);
+              // Wait before retry
+              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            }
+            
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            const response = await fetch(url.toString(), {
+              ...options,
+              signal: controller.signal,
+              headers: {
+                'Content-Type': 'application/json',
+                ...options?.headers,
+              },
+            });
+            
+            clearTimeout(timeoutId);
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+              console.error('HTTP error:', response.status, response.statusText);
+              // Don't retry on 4xx errors (client errors)
+              if (response.status >= 400 && response.status < 500) {
+                return response;
+              }
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return response;
+          } catch (error: any) {
+            lastError = error;
+            console.error(`Attempt ${attempt + 1} failed:`, error.message);
+            
+            if (error.name === 'AbortError') {
+              console.error('Request timed out');
+            }
+            
+            // Don't retry on the last attempt
+            if (attempt === maxRetries) {
+              break;
+            }
           }
-          
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-          
-          const response = await fetch(url.toString(), {
-            ...options,
-            signal: controller.signal,
-            headers: {
-              'Content-Type': 'application/json',
-              ...options?.headers,
-            },
-          });
-          
-          clearTimeout(timeoutId);
-          console.log('Response status:', response.status);
-          
-          if (!response.ok) {
-            console.error('HTTP error:', response.status, response.statusText);
-          }
-          
-          return response;
-        } catch (error: any) {
-          console.error('ERROR Network request failed:', error);
-          console.error('Request URL:', url);
-          const baseUrl = getBaseUrl();
-          console.error('Base URL:', baseUrl);
-          
-          if (error.name === 'AbortError') {
-            throw new Error('Request timed out. Please check your connection and try again.');
-          }
-          
-          // Provide more specific error messages with troubleshooting
-          if (error.message.includes('Network request failed') || error.message.includes('Failed to fetch')) {
-            throw new Error(`Network request failed: Failed to fetch. Please check if the server is running on ${baseUrl}.`);
-          }
-          
-          throw error;
         }
+        
+        // All retries failed
+        console.error('ERROR All network attempts failed:', lastError);
+        console.error('Request URL:', url);
+        console.error('Base URL:', baseUrl);
+        
+        if (lastError.name === 'AbortError') {
+          throw new Error('Request timed out. Please check your connection and try again.');
+        }
+        
+        // Provide more specific error messages with troubleshooting
+        if (lastError.message.includes('Network request failed') || lastError.message.includes('Failed to fetch') || lastError.message.includes('fetch')) {
+          throw new Error(`Network request failed: Failed to fetch. Please check if the server is running on ${baseUrl}.`);
+        }
+        
+        throw lastError;
       },
     }),
   ],
