@@ -294,7 +294,6 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
               bounces={Platform.OS === 'ios'}
               scrollEnabled={true}
               nestedScrollEnabled={true}
-              enableOnAndroid={true}
             >
             {/* Cover Art Section */}
             <Text style={styles.label}>Cover Art (optional)</Text>
