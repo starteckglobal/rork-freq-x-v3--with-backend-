@@ -15,26 +15,10 @@ export interface AdminUser {
 
 // Mock admin users database (in production, use real database)
 const ADMIN_USERS: Record<string, { password: string; user: AdminUser }> = {
-  'admin': {
-    password: 'admin123',
-    user: {
-      id: '1',
-      username: 'admin',
-      role: 'super_admin',
-      permissions: [
-        'user_management:view', 'user_management:edit', 'user_management:ban', 'user_management:delete',
-        'content_moderation:approve', 'content_moderation:reject', 'content_moderation:flag',
-        'payment_management:view', 'payment_management:process', 'payment_management:dispute',
-        'system_controls:restart', 'system_controls:maintenance', 'system_controls:backup',
-        'analytics:view', 'analytics:export',
-        'synclab:manage', 'synclab:create', 'synclab:delete'
-      ]
-    }
-  },
   'masterfreq': {
     password: 'freq2007',
     user: {
-      id: '2',
+      id: '1',
       username: 'masterfreq',
       role: 'super_admin',
       permissions: [
@@ -49,7 +33,7 @@ const ADMIN_USERS: Record<string, { password: string; user: AdminUser }> = {
   }
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || 'freq-admin-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Context creation function
 export const createContext = async (opts: FetchCreateContextFnOptions) => {
