@@ -13,6 +13,8 @@ import {
 import { X, Shield } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useRouter } from 'expo-router';
+import { trpc } from '@/lib/trpc';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AdminLoginModalProps {
   visible: boolean;
@@ -24,6 +26,7 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const loginMutation = trpc.auth.login.useMutation();
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
@@ -33,16 +36,39 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
 
     setLoading(true);
 
-    // Check credentials
-    if (username === 'masterfreq' && password === 'freq2007') {
+    try {
+      // First test basic connectivity
+      const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL || 'http://localhost:8081';
+      console.log('Testing connectivity to:', baseUrl);
+      
+      const result = await loginMutation.mutateAsync({
+        username: username.trim(),
+        password: password.trim(),
+      });
+
+      // Store the token
+      await AsyncStorage.setItem('admin_token', result.token);
+      
       setLoading(false);
       onClose();
       setUsername('');
       setPassword('');
       router.push('/admin');
-    } else {
+    } catch (error: any) {
       setLoading(false);
-      Alert.alert('Access Denied', 'Invalid credentials');
+      console.error('Login attempt failed:', error);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Login failed';
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network request failed')) {
+        errorMessage = 'Cannot connect to server. Please ensure the backend is running on port 8081.';
+      } else if (error.message?.includes('UNAUTHORIZED') || error.message?.includes('Invalid credentials')) {
+        errorMessage = 'Invalid username or password';
+      } else {
+        errorMessage = error.message || 'An unexpected error occurred';
+      }
+      
+      Alert.alert('Login Error', errorMessage);
     }
   };
 

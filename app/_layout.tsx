@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { trpc } from '@/lib/trpc';
 import { httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import '@/lib/firebase';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -45,8 +46,34 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
-      headers: {
-        'Content-Type': 'application/json',
+      headers: async () => {
+        const token = await AsyncStorage.getItem('admin_token');
+        return {
+          'Content-Type': 'application/json',
+          ...(token && { authorization: `Bearer ${token}` }),
+        };
+      },
+      fetch: async (url, options) => {
+        try {
+          console.log('Making request to:', url);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          console.log('Response status:', response.status);
+          return response;
+        } catch (error: any) {
+          console.error('Network request failed:', error);
+          if (error.name === 'AbortError') {
+            throw new Error('Request timed out. Please check your connection and try again.');
+          }
+          throw new Error(`Network request failed: ${error.message}. Please check if the server is running on ${getBaseUrl()}.`);
+        }
       },
     }),
   ],

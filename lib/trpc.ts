@@ -11,11 +11,16 @@ const getBaseUrl = () => {
   if (process.env.NODE_ENV === 'development') {
     // Check if we're running on web or mobile
     if (typeof window !== 'undefined') {
-      // Web
+      // Web - use localhost
       return 'http://localhost:8081';
     } else {
-      // Mobile - use your computer's IP address
-      // You may need to replace this with your actual IP address for mobile testing
+      // Mobile - need to use the tunnel URL or computer's IP
+      // When using expo start --tunnel, the backend should be accessible via tunnel
+      // For now, try to use the tunnel URL if available
+      if (process.env.EXPO_PUBLIC_RORK_API_BASE_URL) {
+        return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
+      }
+      // Fallback to localhost for mobile (this might not work on physical devices)
       return 'http://localhost:8081';
     }
   }
@@ -43,8 +48,11 @@ export const trpcClient = createTRPCClient<AppRouter>({
       },
       fetch: async (url, options) => {
         try {
+          console.log('Making request to:', url);
+          console.log('Base URL:', getBaseUrl());
+          
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
           
           const response = await fetch(url, {
             ...options,
@@ -52,10 +60,23 @@ export const trpcClient = createTRPCClient<AppRouter>({
           });
           
           clearTimeout(timeoutId);
+          console.log('Response status:', response.status);
           return response;
-        } catch (error) {
+        } catch (error: any) {
           console.error('Network request failed:', error);
-          throw new Error('Network request failed. Please check if the server is running.');
+          console.error('Request URL:', url);
+          console.error('Base URL:', getBaseUrl());
+          
+          if (error.name === 'AbortError') {
+            throw new Error('Request timed out. Please check your connection and try again.');
+          }
+          
+          // Provide more specific error messages
+          if (error.message.includes('Network request failed')) {
+            throw new Error(`Cannot connect to server. Please ensure:\n1. Backend server is running (run: bun run server.ts)\n2. Server is accessible at ${getBaseUrl()}\n3. For mobile devices, use tunnel mode (expo start --tunnel)`);
+          }
+          
+          throw new Error(`Network request failed: ${error.message}`);
         }
       },
     }),

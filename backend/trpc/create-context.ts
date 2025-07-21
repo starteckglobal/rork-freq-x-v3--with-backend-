@@ -33,7 +33,7 @@ const ADMIN_USERS: Record<string, { password: string; user: AdminUser }> = {
   }
 };
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'freq-admin-secret-key-2024';
 
 // Context creation function
 export const createContext = async (opts: FetchCreateContextFnOptions) => {
