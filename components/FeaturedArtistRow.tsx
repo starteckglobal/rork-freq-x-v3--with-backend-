@@ -95,7 +95,7 @@ export default FeaturedArtistRow;
 const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
-    minHeight: 220,
+    minHeight: 200,
   },
   title: {
     color: colors.text,
@@ -105,21 +105,25 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   glow: {
     position: 'absolute',
-    top: -8,
-    left: -8,
-    right: -8,
-    bottom: -8,
-    borderRadius: 16,
+    top: -12,
+    left: -12,
+    right: -12,
+    bottom: -12,
+    borderRadius: 20,
     backgroundColor: '#2B4BF2',
     zIndex: 0,
+    alignSelf: 'center',
   },
   scrollContent: {
     paddingRight: 16,
-    paddingLeft: 4,
-    minHeight: 180,
+    paddingLeft: 16,
+    minHeight: 160,
     zIndex: 1,
+    alignItems: 'center',
   },
 });

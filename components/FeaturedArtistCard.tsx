@@ -15,11 +15,22 @@ interface FeaturedArtistCardProps {
 export default function FeaturedArtistCard({ user, onPress }: FeaturedArtistCardProps) {
   const router = useRouter();
   
-  // Generate random photos from Unsplash for each artist
-  const getRandomPhoto = (userId: string) => {
-    const photoIds = ['1527004', '415829', '598745', '1674752', '1858175', '2379004', '2613260', '3785077', '4099235', '4553618'];
-    const randomId = photoIds[parseInt(userId) % photoIds.length];
-    return `https://picsum.photos/id/${randomId}/300/300`;
+  // Generate album cover images for each artist
+  const getAlbumCover = (userId: string) => {
+    const albumCovers = [
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=400&h=400&fit=crop', // Vinyl records
+      'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?q=80&w=400&h=400&fit=crop', // Music studio
+      'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=400&h=400&fit=crop', // Synthesizer
+      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&h=400&fit=crop', // Audio mixing
+      'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?q=80&w=400&h=400&fit=crop', // Piano keys
+      'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=400&h=400&fit=crop', // Guitar
+      'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=400&h=400&fit=crop', // Vinyl collection
+      'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?q=80&w=400&h=400&fit=crop', // Recording studio
+      'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=400&h=400&fit=crop', // Music equipment
+      'https://images.unsplash.com/photo-1511379938547-c1f69419868d?q=80&w=400&h=400&fit=crop'  // Audio gear
+    ];
+    const index = parseInt(userId) % albumCovers.length;
+    return albumCovers[index];
   };
   
   if (!user || !user.id) return null;
@@ -39,8 +50,8 @@ export default function FeaturedArtistCard({ user, onPress }: FeaturedArtistCard
       activeOpacity={0.7}
     >
       <Image 
-        source={{ uri: getRandomPhoto(user.id) }} 
-        style={styles.photo}
+        source={{ uri: getAlbumCover(user.id) }} 
+        style={styles.albumCover}
         defaultSource={{ uri: defaultAvatarUri }}
       />
       
@@ -55,12 +66,13 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 12,
     marginRight: 12,
-    width: 160,
-    height: 160,
+    width: 140,
+    height: 140,
     position: 'relative',
     overflow: 'hidden',
+    alignSelf: 'center',
   },
-  photo: {
+  albumCover: {
     width: '100%',
     height: '100%',
     borderRadius: 12,
