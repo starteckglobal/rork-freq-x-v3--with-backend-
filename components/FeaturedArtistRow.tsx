@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, ScrollView, Platform, Animated } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Platform, Animated, Dimensions } from 'react-native';
 import FeaturedArtistCard from './FeaturedArtistCard';
 import { User } from '@/types/audio';
 import { colors } from '@/constants/colors';
@@ -11,6 +11,7 @@ interface FeaturedArtistRowProps {
 
 const FeaturedArtistRow = React.memo(function FeaturedArtistRow({ title, artists }: FeaturedArtistRowProps) {
   const glowAnim = useRef(new Animated.Value(0)).current;
+  const { width: screenWidth } = Dimensions.get('window');
   
   useEffect(() => {
     // Create glow animation similar to FREQY chat button
@@ -57,15 +58,17 @@ const FeaturedArtistRow = React.memo(function FeaturedArtistRow({ title, artists
               opacity: glowOpacity,
             },
           ]}
+          pointerEvents="none"
         />
         <ScrollView 
+          style={styles.scrollView}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           nestedScrollEnabled={true}
           scrollEventThrottle={16}
           decelerationRate="fast"
-          snapToInterval={Platform.OS === 'ios' ? 172 : undefined}
+          snapToInterval={Platform.OS === 'ios' ? 152 : undefined}
           snapToAlignment="start"
           directionalLockEnabled={true}
           bounces={Platform.OS === 'ios'}
@@ -76,7 +79,8 @@ const FeaturedArtistRow = React.memo(function FeaturedArtistRow({ title, artists
           pagingEnabled={false}
           alwaysBounceHorizontal={Platform.OS === 'ios'}
           scrollEnabled={true}
-          canCancelContentTouches={true}
+          canCancelContentTouches={false}
+          delayContentTouches={false}
         >
           {artists.map((artist, index) => (
             <FeaturedArtistCard 
@@ -105,25 +109,28 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     position: 'relative',
-    alignItems: 'center',
+    height: 160,
     justifyContent: 'center',
   },
   glow: {
     position: 'absolute',
-    top: -12,
-    left: -12,
-    right: -12,
-    bottom: -12,
+    top: -8,
+    left: 8,
+    right: 8,
+    bottom: -8,
     borderRadius: 20,
     backgroundColor: '#2B4BF2',
     zIndex: 0,
-    alignSelf: 'center',
+  },
+  scrollView: {
+    height: 160,
+    zIndex: 1,
   },
   scrollContent: {
     paddingRight: 16,
     paddingLeft: 16,
-    minHeight: 160,
-    zIndex: 1,
     alignItems: 'center',
+    minHeight: 160,
+    flexGrow: 1,
   },
 });
