@@ -1,17 +1,20 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Image, Platform, Dimensions } from 'react-native';
 import { Play } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { Playlist } from '@/types/audio';
 import { colors } from '@/constants/colors';
 import { defaultCoverArt } from '@/constants/images';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 interface PlaylistCardProps {
   playlist: Playlist;
   onPress?: () => void;
+  containerStyle?: any;
 }
 
-const PlaylistCard = React.memo(function PlaylistCard({ playlist, onPress }: PlaylistCardProps) {
+const PlaylistCard = React.memo(function PlaylistCard({ playlist, onPress, containerStyle }: PlaylistCardProps) {
   const router = useRouter();
   
   if (!playlist || !playlist.id) return null;
@@ -26,7 +29,7 @@ const PlaylistCard = React.memo(function PlaylistCard({ playlist, onPress }: Pla
   
   return (
     <TouchableOpacity 
-      style={styles.container}
+      style={[styles.container, containerStyle]}
       onPress={handlePress}
       activeOpacity={0.7}
     >
@@ -53,10 +56,11 @@ export default PlaylistCard;
 
 const styles = StyleSheet.create({
   container: {
-    width: 160,
+    flex: 1,
     marginRight: 12,
     flexShrink: 0,
-    minWidth: 160,
+    minWidth: 140,
+    maxWidth: 200,
   },
   imageContainer: {
     position: 'relative',

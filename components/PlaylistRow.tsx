@@ -63,6 +63,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingRight: 16,
     paddingLeft: 4,
-    minHeight: 180, // Ensure scroll content has minimum height
+    minHeight: 180,
+    alignItems: 'flex-start',
+    flexGrow: 0,
   },
 });

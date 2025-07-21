@@ -111,50 +111,45 @@ export default function LibraryScreen() {
     }
   };
   
-  // Render playlists in a grid format for web
+  // Render playlists in a consistent grid format across all platforms
   const renderPlaylistsGrid = () => {
-    if (Platform.OS === 'web') {
-      return (
-        <View style={styles.webPlaylistGrid}>
-          {displayPlaylists.map((playlist) => (
-            <View key={playlist.id} style={styles.webPlaylistItem}>
-              <PlaylistCard
-                playlist={playlist}
-                onPress={() => {
-                  analyticsEventBus.publish('custom_event', {
-                    category: 'content_interaction',
-                    action: 'playlist_click',
-                    playlist_id: playlist.id,
-                    playlist_name: playlist.name,
-                    source: 'library_screen'
-                  });
-                  
-                  router.push(`/playlist/${playlist.id}`);
-                }}
-              />
-            </View>
-          ))}
-        </View>
-      );
-    } else {
-      return (
-        <FlatList
-          data={displayPlaylists}
-          renderItem={renderPlaylistItem}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          columnWrapperStyle={displayPlaylists.length > 1 ? styles.playlistRow : undefined}
-          scrollEnabled={false}
-          nestedScrollEnabled={true}
-          removeClippedSubviews={false}
-          initialNumToRender={10}
-          maxToRenderPerBatch={5}
-          windowSize={10}
-          contentContainerStyle={styles.playlistGrid}
-          keyboardShouldPersistTaps="handled"
-        />
-      );
-    }
+    const itemWidth = (width - 48) / 2; // Account for padding and gap
+    
+    return (
+      <FlatList
+        data={displayPlaylists}
+        renderItem={({ item }) => (
+          <View style={[styles.playlistItem, { width: itemWidth }]}>
+            <PlaylistCard
+              playlist={item}
+              onPress={() => {
+                analyticsEventBus.publish('custom_event', {
+                  category: 'content_interaction',
+                  action: 'playlist_click',
+                  playlist_id: item.id,
+                  playlist_name: item.name,
+                  source: 'library_screen'
+                });
+                
+                router.push(`/playlist/${item.id}`);
+              }}
+            />
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={displayPlaylists.length > 1 ? styles.playlistRow : undefined}
+        scrollEnabled={false}
+        nestedScrollEnabled={true}
+        removeClippedSubviews={false}
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={10}
+        contentContainerStyle={styles.playlistGrid}
+        keyboardShouldPersistTaps="handled"
+        key={`playlist-grid-${displayPlaylists.length}`}
+      />
+    );
   };
   
   return (
@@ -476,6 +471,11 @@ const styles = StyleSheet.create({
   playlistRow: {
     justifyContent: 'space-between',
     marginBottom: 16,
+    paddingHorizontal: 0,
+  },
+  playlistItem: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
   },
   createPlaylistCard: {
     width: '100%',
@@ -501,16 +501,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  // Web-specific styles
-  webPlaylistGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    paddingTop: 16,
-    gap: 16,
-  },
-  webPlaylistItem: {
-    width: Platform.OS === 'web' ? '48%' : 160,
-    maxWidth: Platform.OS === 'web' ? 200 : 160,
-  },
+
 });
