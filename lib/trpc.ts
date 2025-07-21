@@ -46,7 +46,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
           console.log('Base URL:', getBaseUrl());
           
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
           
           const response = await fetch(url.toString(), {
             ...options,
@@ -66,7 +66,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
           
           return response;
         } catch (error: any) {
-          console.error('Network request failed:', error);
+          console.error('ERROR Network request failed:', error);
           console.error('Request URL:', url);
           console.error('Base URL:', getBaseUrl());
           

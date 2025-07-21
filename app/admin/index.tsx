@@ -41,8 +41,20 @@ export default function AdminLogin() {
     },
     onError: (error) => {
       setIsLoading(false);
-      Alert.alert('Access Denied', error.message || 'Invalid credentials. Please check your username and password.');
-      console.error('Login error:', error);
+      console.error('ERROR Login error:', error);
+      
+      let errorMessage = 'Invalid credentials. Please check your username and password.';
+      let troubleshootingTips = '';
+      
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('Network request failed')) {
+        errorMessage = 'Cannot connect to server';
+        troubleshootingTips = '\n\nTroubleshooting:\n• Start backend: bun run server.ts\n• Check port 8081 availability\n• For mobile: Use computer\'s IP in .env.local';
+      } else if (error.message?.includes('UNAUTHORIZED') || error.message?.includes('Invalid credentials')) {
+        errorMessage = 'Invalid credentials';
+        troubleshootingTips = '\n\nDefault login:\nUsername: admin\nPassword: admin123';
+      }
+      
+      Alert.alert('Access Denied', errorMessage + troubleshootingTips);
     }
   });
 

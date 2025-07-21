@@ -56,19 +56,23 @@ export default function AdminLoginModal({ visible, onClose }: AdminLoginModalPro
       router.push('/admin');
     } catch (error: any) {
       setLoading(false);
-      console.error('Login attempt failed:', error);
+      console.error('ERROR Login attempt failed:', error);
       
       // Provide more specific error messages
       let errorMessage = 'Login failed';
+      let troubleshootingTips = '';
+      
       if (error.message?.includes('Failed to fetch') || error.message?.includes('Network request failed')) {
-        errorMessage = 'Cannot connect to server. Please ensure the backend is running on port 8081.';
+        errorMessage = 'Cannot connect to server';
+        troubleshootingTips = '\n\nTroubleshooting:\n• Ensure backend is running: bun run server.ts\n• Check if port 8081 is available\n• For mobile: Update .env.local with your computer\'s IP address';
       } else if (error.message?.includes('UNAUTHORIZED') || error.message?.includes('Invalid credentials')) {
         errorMessage = 'Invalid username or password';
+        troubleshootingTips = '\n\nDefault credentials:\nUsername: admin\nPassword: admin123';
       } else {
         errorMessage = error.message || 'An unexpected error occurred';
       }
       
-      Alert.alert('Login Error', errorMessage);
+      Alert.alert('Login Error', errorMessage + troubleshootingTips);
     }
   };
 
