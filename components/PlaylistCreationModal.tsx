@@ -271,7 +271,8 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardAvoidingView}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 50}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20}
+          enabled={true}
         >
           <View style={styles.modalContent}>
             <View style={styles.header}>
@@ -290,6 +291,10 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
               keyboardDismissMode="interactive"
               automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
               automaticallyAdjustContentInsets={false}
+              bounces={Platform.OS === 'ios'}
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              enableOnAndroid={true}
             >
             {/* Cover Art Section */}
             <Text style={styles.label}>Cover Art (optional)</Text>
@@ -338,8 +343,10 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
               onFocus={() => {
                 // Scroll to make input visible when keyboard appears
                 setTimeout(() => {
-                  scrollViewRef.current?.scrollTo({ y: 100, animated: true });
-                }, 100);
+                  if (Platform.OS !== 'web') {
+                    scrollViewRef.current?.scrollTo({ y: 150, animated: true });
+                  }
+                }, 200);
               }}
               autoFocus
               maxLength={50}
@@ -356,8 +363,10 @@ export default function PlaylistCreationModal({ visible, onClose, onSuccess }: P
               onFocus={() => {
                 // Scroll to make input visible when keyboard appears
                 setTimeout(() => {
-                  scrollViewRef.current?.scrollTo({ y: 200, animated: true });
-                }, 100);
+                  if (Platform.OS !== 'web') {
+                    scrollViewRef.current?.scrollTo({ y: 250, animated: true });
+                  }
+                }, 200);
               }}
               multiline
               numberOfLines={4}
@@ -437,11 +446,13 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '100%',
     maxWidth: Math.min(width * 0.9, 500),
-    minHeight: height * 0.5,
-    maxHeight: height * 0.85,
+    minHeight: Math.min(height * 0.6, 400),
+    maxHeight: Math.min(height * 0.9, 650),
     backgroundColor: colors.card,
     borderRadius: 12,
     overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
     ...Platform.select({
       android: {
         elevation: 8,
@@ -476,7 +487,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     flexGrow: 1,
-    paddingBottom: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    minHeight: Platform.OS !== 'web' ? height * 0.4 : 'auto',
   },
   label: {
     fontSize: 16,

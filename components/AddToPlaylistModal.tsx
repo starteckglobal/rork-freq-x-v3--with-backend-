@@ -227,19 +227,25 @@ export default function AddToPlaylistModal({
                 renderItem={renderPlaylistItem}
                 keyExtractor={item => item.id}
                 style={styles.playlistList}
-                contentContainerStyle={styles.playlistListContent}
-                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[
+                  styles.playlistListContent,
+                  playlists.length <= 3 && { flexGrow: 0 }
+                ]}
+                showsVerticalScrollIndicator={true}
                 scrollEnabled={true}
-                bounces={true}
+                bounces={Platform.OS === 'ios'}
                 alwaysBounceVertical={false}
                 keyboardShouldPersistTaps="handled"
                 removeClippedSubviews={false}
-                initialNumToRender={8}
-                maxToRenderPerBatch={8}
-                windowSize={5}
+                initialNumToRender={10}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                nestedScrollEnabled={true}
+                persistentScrollbar={true}
+                indicatorStyle={Platform.OS === 'ios' ? 'white' : 'default'}
                 getItemLayout={(data, index) => ({
-                  length: 76, // Approximate height of each item (48 + 16 + 12)
-                  offset: 76 * index,
+                  length: 88, // More accurate height: 48 (image) + 16 (padding) + 16 (margin) + 8 (extra)
+                  offset: 88 * index,
                   index,
                 })}
               />
@@ -285,15 +291,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: Platform.select({
+      ios: 20,
+      android: 16,
+      web: 20,
+    }),
   },
   modalContent: {
     width: '100%',
-    maxWidth: Math.min(width * 0.9, 400),
-    maxHeight: height * 0.8,
+    maxWidth: Math.min(width * 0.9, 450),
+    height: Math.min(height * 0.85, 700),
     backgroundColor: colors.background,
     borderRadius: 16,
     overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
     ...Platform.select({
       android: {
         elevation: 12,
@@ -370,6 +382,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
+    minHeight: 150,
   },
   emptyText: {
     color: colors.text,
@@ -386,10 +399,13 @@ const styles = StyleSheet.create({
   },
   playlistList: {
     flex: 1,
+    minHeight: 200,
+    maxHeight: Math.min(height * 0.5, 400),
   },
   playlistListContent: {
     paddingHorizontal: 20,
     paddingVertical: 16,
+    flexGrow: 1,
   },
   playlistItem: {
     flexDirection: 'row',
