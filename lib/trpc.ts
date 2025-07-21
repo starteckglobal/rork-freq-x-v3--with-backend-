@@ -53,6 +53,24 @@ const checkServerHealth = async (baseUrl: string): Promise<boolean> => {
   }
 };
 
+// Simple connection test function
+const testConnection = async (baseUrl: string): Promise<boolean> => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(`${baseUrl}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+};
+
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
@@ -67,91 +85,45 @@ export const trpcClient = createTRPCClient<AppRouter>({
       },
       fetch: async (url, options) => {
         const baseUrl = getBaseUrl();
-        console.log('Making request to:', url);
-        console.log('Base URL:', baseUrl);
+        console.log('Making TRPC request to:', url);
         
-        // First, test basic connectivity
-        try {
-          const healthCheck = await fetch(`${baseUrl}/health`, {
-            method: 'GET',
-            signal: AbortSignal.timeout(3000),
-          });
-          
-          if (!healthCheck.ok) {
-            throw new Error(`Backend server returned ${healthCheck.status}`);
-          }
-        } catch (healthError: any) {
-          console.error('Health check failed:', healthError.message);
+        // Quick connection test first
+        const isConnected = await testConnection(baseUrl);
+        if (!isConnected) {
+          console.error('Backend server is not responding');
           throw new Error('Cannot connect to backend server. Please ensure the server is running.');
         }
         
-        // Retry logic for network requests
-        const maxRetries = 2;
-        let lastError: any;
-        
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-          try {
-            if (attempt > 0) {
-              console.log(`Retry attempt ${attempt}/${maxRetries}`);
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-            }
-            
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-            
-            const response = await fetch(url.toString(), {
-              ...options,
-              signal: controller.signal,
-              headers: {
-                'Content-Type': 'application/json',
-                ...options?.headers,
-              },
-            });
-            
-            clearTimeout(timeoutId);
-            console.log('Response status:', response.status);
-            
-            if (!response.ok) {
-              console.error('HTTP error:', response.status, response.statusText);
-              // Don't retry on 4xx errors (client errors)
-              if (response.status >= 400 && response.status < 500) {
-                return response;
-              }
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            return response;
-          } catch (error: any) {
-            lastError = error;
-            console.error(`Attempt ${attempt + 1} failed:`, error.message);
-            
-            if (error.name === 'AbortError') {
-              console.error('Request timed out');
-            }
-            
-            // Don't retry on the last attempt
-            if (attempt === maxRetries) {
-              break;
-            }
+        // Make the actual request with timeout
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+          
+          const response = await fetch(url.toString(), {
+            ...options,
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json',
+              ...options?.headers,
+            },
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            console.error('TRPC HTTP error:', response.status, response.statusText);
           }
+          
+          return response;
+        } catch (error: any) {
+          console.error('TRPC request failed:', error.message);
+          
+          if (error.name === 'AbortError') {
+            throw new Error('Request timed out. Please check your connection and try again.');
+          }
+          
+          throw new Error('Cannot connect to backend server. Please ensure the server is running.');
         }
-        
-        // All retries failed
-        console.error('ERROR All network attempts failed:', lastError);
-        console.error('Request URL:', url);
-        console.error('Base URL:', baseUrl);
-        
-        if (lastError.name === 'AbortError') {
-          throw new Error('Request timed out. Please check your connection and try again.');
-        }
-        
-        // Provide more specific error messages with troubleshooting
-        if (lastError.message.includes('Network request failed') || lastError.message.includes('Failed to fetch') || lastError.message.includes('fetch')) {
-          throw new Error(`Cannot connect to backend server. Please ensure the server is running.`);
-        }
-        
-        throw new Error(`Cannot connect to backend server. Please ensure the server is running.`);
       },
     }),
   ],
