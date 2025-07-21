@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image } from 'react-native';
-import { UserRound, Plus, Check } from 'lucide-react-native';
+import { UserRound } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { User } from '@/types/audio';
 import { colors } from '@/constants/colors';
@@ -14,14 +14,13 @@ interface FeaturedArtistCardProps {
 
 export default function FeaturedArtistCard({ user, onPress }: FeaturedArtistCardProps) {
   const router = useRouter();
-  const { isFollowing, followUser, unfollowUser } = useUserStore();
-  const [following, setFollowing] = useState(false);
   
-  useEffect(() => {
-    if (user && user.id) {
-      setFollowing(isFollowing(user.id));
-    }
-  }, [user, isFollowing]);
+  // Generate random photos from Unsplash for each artist
+  const getRandomPhoto = (userId: string) => {
+    const photoIds = ['1527004', '415829', '598745', '1674752', '1858175', '2379004', '2613260', '3785077', '4099235', '4553618'];
+    const randomId = photoIds[parseInt(userId) % photoIds.length];
+    return `https://picsum.photos/id/${randomId}/300/300`;
+  };
   
   if (!user || !user.id) return null;
   
@@ -33,55 +32,20 @@ export default function FeaturedArtistCard({ user, onPress }: FeaturedArtistCard
     }
   };
   
-  const handleFollow = (e: any) => {
-    e.stopPropagation();
-    if (following) {
-      unfollowUser(user.id);
-      setFollowing(false);
-    } else {
-      followUser(user.id);
-      setFollowing(true);
-    }
-  };
-  
   return (
     <TouchableOpacity 
       style={styles.container}
       onPress={handlePress}
       activeOpacity={0.7}
     >
-      {user.avatarUrl ? (
-        <Image 
-          source={{ uri: user.avatarUrl || defaultAvatarUri }} 
-          style={styles.avatar}
-        />
-      ) : (
-        <View style={styles.avatarPlaceholder}>
-          <UserRound size={32} color={colors.textSecondary} />
-        </View>
-      )}
+      <Image 
+        source={{ uri: getRandomPhoto(user.id) }} 
+        style={styles.photo}
+        defaultSource={{ uri: defaultAvatarUri }}
+      />
       
-      <View style={styles.content}>
+      <View style={styles.overlay}>
         <Text style={styles.displayName} numberOfLines={1}>{user.displayName}</Text>
-        <Text style={styles.username} numberOfLines={1}>@{user.username}</Text>
-        <Text style={styles.stats}>{user.tracksCount || 0} tracks</Text>
-        
-        <TouchableOpacity 
-          style={[styles.followButton, following && styles.followingButton]}
-          onPress={handleFollow}
-        >
-          {following ? (
-            <>
-              <Check size={16} color={colors.text} />
-              <Text style={styles.followText}>Following</Text>
-            </>
-          ) : (
-            <>
-              <Plus size={16} color={colors.text} />
-              <Text style={styles.followText}>Follow</Text>
-            </>
-          )}
-        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -89,69 +53,32 @@ export default function FeaturedArtistCard({ user, onPress }: FeaturedArtistCard
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 16,
     marginRight: 12,
     width: 160,
-    alignItems: 'center',
+    height: 160,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.cardElevated,
-    marginBottom: 12,
-  },
-  avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.cardElevated,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  content: {
-    alignItems: 'center',
+  photo: {
     width: '100%',
+    height: '100%',
+    borderRadius: 12,
+  },
+  overlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 12,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
   },
   displayName: {
-    color: colors.text,
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 4,
-  },
-  username: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  stats: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  followButton: {
-    flexDirection: 'row',
-    backgroundColor: colors.primary,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 4,
-    minWidth: 80,
-    justifyContent: 'center',
-  },
-  followingButton: {
-    backgroundColor: colors.cardElevated,
-  },
-  followText: {
-    color: colors.text,
-    fontSize: 12,
-    fontWeight: '500',
   },
 });
