@@ -9,7 +9,7 @@ const app = new Hono();
 
 // Enable CORS for all routes with more permissive settings for development
 app.use("*", cors({
-  origin: (origin) => {
+  origin: (origin, c) => {
     console.log('CORS origin:', origin);
     
     // Allow all origins in development
