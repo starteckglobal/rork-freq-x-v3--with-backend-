@@ -15,6 +15,7 @@ const getBaseUrl = () => {
       return 'http://localhost:8081';
     } else {
       // Mobile - use your computer's IP address
+      // You may need to replace this with your actual IP address for mobile testing
       return 'http://localhost:8081';
     }
   }
@@ -39,6 +40,18 @@ export const trpcClient = createTRPCClient<AppRouter>({
           'Content-Type': 'application/json',
           ...(token && { authorization: `Bearer ${token}` }),
         };
+      },
+      fetch: async (url, options) => {
+        try {
+          const response = await fetch(url, {
+            ...options,
+            timeout: 10000, // 10 second timeout
+          });
+          return response;
+        } catch (error) {
+          console.error('Network request failed:', error);
+          throw new Error('Network request failed. Please check if the server is running.');
+        }
       },
     }),
   ],

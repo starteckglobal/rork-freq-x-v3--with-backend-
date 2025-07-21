@@ -44,4 +44,17 @@ app.get("/trpc", (c) => {
   return c.json({ status: "ok", message: "TRPC endpoint is available" });
 });
 
+// Test endpoint for payment system
+app.get("/api/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    message: "Backend is running",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      trpc: "/api/trpc",
+      health: "/api/health"
+    }
+  });
+});
+
 export default app;
