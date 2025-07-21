@@ -3,10 +3,12 @@ import { StyleSheet, Text, View, ScrollView, SafeAreaView, Image, TouchableOpaci
 import { Stack, useRouter, useFocusEffect } from 'expo-router';
 import TrackList from '@/components/TrackList';
 import PlaylistRow from '@/components/PlaylistRow';
+import FeaturedArtistRow from '@/components/FeaturedArtistRow';
 import MiniPlayer from '@/components/MiniPlayer';
 import FullPlayer from '@/components/FullPlayer';
 import { featuredTracks, newReleases, trendingTracks } from '@/mocks/tracks';
 import { featuredPlaylists } from '@/mocks/playlists';
+import { featuredArtists } from '@/mocks/users';
 import { colors } from '@/constants/colors';
 import { usePlayerStore } from '@/store/player-store';
 import { useUserStore } from '@/store/user-store';
@@ -191,6 +193,11 @@ export default function HomeScreen() {
         removeClippedSubviews={false}
         directionalLockEnabled={false}
       >
+        <FeaturedArtistRow 
+          key={`featured-artists-${refreshKey}-${forceUpdate}-${Platform.OS}`} 
+          title="Featured Artists" 
+          artists={featuredArtists} 
+        />
         <PlaylistRow 
           key={`featured-playlists-${refreshKey}-${forceUpdate}-${Platform.OS}`} 
           title="Featured Playlists" 

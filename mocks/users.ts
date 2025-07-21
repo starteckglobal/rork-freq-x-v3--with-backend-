@@ -335,3 +335,12 @@ export const users: User[] = [
 ];
 
 export const suggestedUsers = users.slice(0, 3);
+
+// Featured artists for the home page
+export const featuredArtists = [
+  users[2], // Metro Beats - verified hip hop producer
+  users[4], // Synth Master - verified electronic producer  
+  users[8], // Koto Ru - verified Japanese-inspired electronic
+  users[11], // Neon Lights - verified synthwave producer
+  users[14], // Urban Pulse - verified hip-hop and trap producer
+];
