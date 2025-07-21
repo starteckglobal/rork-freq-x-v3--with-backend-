@@ -80,7 +80,6 @@ const FeaturedArtistRow = React.memo(function FeaturedArtistRow({ title, artists
           alwaysBounceHorizontal={Platform.OS === 'ios'}
           scrollEnabled={true}
           canCancelContentTouches={false}
-          delayContentTouches={false}
         >
           {artists.map((artist, index) => (
             <FeaturedArtistCard 
@@ -100,6 +99,8 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 24,
     minHeight: 200,
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
   },
   title: {
     color: colors.text,
@@ -115,10 +116,10 @@ const styles = StyleSheet.create({
   glow: {
     position: 'absolute',
     top: -8,
-    left: 8,
-    right: 8,
+    left: -16,
+    right: -16,
     bottom: -8,
-    borderRadius: 20,
+    height: 176,
     backgroundColor: '#2B4BF2',
     zIndex: 0,
   },
