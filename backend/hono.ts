@@ -14,7 +14,7 @@ app.use("*", cors({
     
     // Allow all origins in development
     if (process.env.NODE_ENV === 'development') {
-      return true; // Allow all origins in development
+      return origin || '*'; // Return the origin or wildcard in development
     }
     
     // In production, specify allowed origins
@@ -28,10 +28,10 @@ app.use("*", cors({
     
     // Also allow tunnel URLs (they typically contain .ngrok.io or similar)
     if (origin && (origin.includes('.ngrok.io') || origin.includes('.tunnel.') || origin.includes('exp://'))) {
-      return true;
+      return origin;
     }
     
-    return allowedOrigins.includes(origin || '');
+    return allowedOrigins.includes(origin || '') ? origin : null;
   },
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'x-trpc-source', 'x-requested-with'],
