@@ -132,10 +132,10 @@ export const trpcClient = createTRPCClient<AppRouter>({
         
         // Provide more specific error messages with troubleshooting
         if (lastError.message.includes('Network request failed') || lastError.message.includes('Failed to fetch') || lastError.message.includes('fetch')) {
-          throw new Error(`Network request failed: Failed to fetch. Please check if the server is running on ${baseUrl}.`);
+          throw new Error(`Cannot connect to backend server. Please ensure the server is running.`);
         }
         
-        throw lastError;
+        throw new Error(`Cannot connect to backend server. Please ensure the server is running.`);
       },
     }),
   ],
