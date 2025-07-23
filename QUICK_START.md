@@ -1,88 +1,102 @@
 # FREQ App - Quick Start Guide
 
-## 🚀 Getting Started
+## 🚀 Starting the Application
 
-### 1. Start the Backend Server
+### Option 1: Start Everything Together
 ```bash
-# Option 1: Check and start backend automatically
-node check-backend.js
+# Install dependencies (if not already done)
+bun install
 
-# Option 2: Start manually
-bun run server.ts
-```
-
-### 2. Start the Frontend
-```bash
-# For web development
-expo start --web --tunnel
-
-# For mobile development
+# Start both frontend and backend
+node start-server.js &
 expo start --tunnel
 ```
 
-### 3. For Mobile Development
-Update `.env.local` with your computer's IP address:
-```bash
-# Find your IP address
-node get-ip.js
+### Option 2: Start Separately
 
-# Update .env.local
-EXPO_PUBLIC_RORK_API_BASE_URL=http://YOUR_IP_ADDRESS:8081
+**Start Backend Server:**
+```bash
+# Method 1: Using the helper script
+node start-server.js
+
+# Method 2: Direct command
+bun run server.ts
+
+# Method 3: Using the original script
+node start-backend.js
 ```
 
-## 🔧 Troubleshooting Network Issues
-
-### Backend Not Starting
-1. Check if port 8081 is available
-2. Install dependencies: `bun install`
-3. Try starting manually: `bun run server.ts`
-
-### Connection Failed Errors
-1. **For Web**: Use `http://localhost:8081`
-2. **For Mobile**: Use your computer's IP address (not localhost)
-3. **Test connection**: `node test-connection.js`
-
-### Admin Login Issues
-- **Default credentials**:
-  - Username: `admin`
-  - Password: `admin123`
-- **Network errors**: Ensure backend is running on port 8081
-- **Mobile**: Update `.env.local` with correct IP address
-
-## 📱 Development Scripts
-
+**Start Frontend:**
 ```bash
-# Start both backend and frontend
-node start-dev.js
-
-# Check backend status
-node check-backend.js
-
-# Test network connection
-node test-connection.js
-
-# Find your IP address
-node get-ip.js
+expo start --tunnel
 ```
 
-## 🌐 URLs
+## 🔐 Admin Login
 
-- **Web App**: http://localhost:19006
-- **Backend API**: http://localhost:8081/api
-- **Backend Health**: http://localhost:8081/api/health
+**Credentials:**
+- Username: `masterfreq`
+- Password: `freq2007`
+
+**Access Methods:**
+1. **With Backend Running**: Full functionality with tRPC authentication
+2. **Without Backend**: Offline mode with limited functionality
+
+## 🌐 Server Information
+
+- **Backend URL**: http://localhost:8081
 - **tRPC Endpoint**: http://localhost:8081/api/trpc
+- **Health Check**: http://localhost:8081/api
 
-## ⚠️ Common Issues
+## 🔧 Troubleshooting
 
-1. **"Network request failed"**: Backend not running or wrong URL
-2. **"Failed to fetch"**: CORS issues or server not accessible
-3. **Mobile connection issues**: Use IP address instead of localhost
-4. **Admin login fails**: Check backend logs and credentials
+### "Failed to fetch" or "Network request failed" errors:
 
-## 🔍 Debug Steps
+1. **Check if backend is running**:
+   ```bash
+   curl http://localhost:8081/api
+   ```
 
-1. Check backend status: `node check-backend.js`
-2. Test connection: `node test-connection.js`
-3. Check logs in terminal running `bun run server.ts`
-4. Verify `.env.local` configuration
-5. Try restarting both backend and frontend
+2. **Start the backend server**:
+   ```bash
+   node start-server.js
+   ```
+
+3. **Check port availability**:
+   ```bash
+   lsof -i :8081
+   ```
+
+### Mobile Device Testing:
+
+1. Find your computer's IP address:
+   ```bash
+   # macOS/Linux
+   ifconfig | grep inet
+   
+   # Windows
+   ipconfig
+   ```
+
+2. Update `lib/trpc.ts` with your IP address:
+   ```typescript
+   return 'http://YOUR_IP_ADDRESS:8081';
+   ```
+
+## 📱 Features
+
+- **Music Streaming**: Browse and play tracks
+- **Admin Dashboard**: User management, content moderation
+- **Payment System**: Stripe integration (demo mode)
+- **Analytics**: User engagement and revenue tracking
+- **Sync Lab**: Music collaboration features
+
+## 🛠️ Development
+
+The app uses:
+- **Frontend**: React Native with Expo
+- **Backend**: Hono.js with tRPC
+- **Database**: Mock data (in-memory)
+- **Authentication**: JWT tokens
+- **Payments**: Stripe (demo mode)
+
+For production deployment, replace mock data with real database connections and configure proper environment variables.

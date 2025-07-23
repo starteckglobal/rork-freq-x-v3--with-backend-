@@ -29,6 +29,26 @@ const getBaseUrl = () => {
   return 'http://localhost:8081';
 };
 
+// Function to test server connectivity
+export const testServerConnection = async (): Promise<boolean> => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for connection test
+    
+    const response = await fetch(`${getBaseUrl()}/api`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    return response.ok;
+  } catch (error) {
+    console.log('Server connection test failed:', error);
+    return false;
+  }
+};
+
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
@@ -44,9 +64,9 @@ export const trpcClient = createTRPCClient<AppRouter>({
       fetch: async (url, options) => {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
           
-          const response = await fetch(url, {
+          const response = await fetch(url.toString(), {
             ...options,
             signal: controller.signal,
           });
@@ -55,7 +75,10 @@ export const trpcClient = createTRPCClient<AppRouter>({
           return response;
         } catch (error) {
           console.error('Network request failed:', error);
-          throw new Error('Network request failed. Please check if the server is running.');
+          if (error.name === 'AbortError') {
+            throw new Error('Request timeout. Please check your connection and try again.');
+          }
+          throw new Error('Network request failed. Please ensure the backend server is running.');
         }
       },
     }),
