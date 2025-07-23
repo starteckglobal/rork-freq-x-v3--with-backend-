@@ -9,7 +9,7 @@ const app = new Hono();
 
 // Enable CORS for all routes with more permissive settings for development
 app.use("*", cors({
-  origin: ['http://localhost:8081', 'http://localhost:19006', 'http://127.0.0.1:8081', 'http://127.0.0.1:19006', 'http://localhost:3000'],
+  origin: ['http://localhost:8081', 'http://localhost:19006', 'http://127.0.0.1:8081', 'http://127.0.0.1:19006', 'http://localhost:3000', 'http://localhost:8082'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -17,8 +17,11 @@ app.use("*", cors({
 
 // Add logging middleware
 app.use("*", async (c, next) => {
-  console.log(`${c.req.method} ${c.req.url}`);
+  const start = Date.now();
+  console.log(`📥 ${c.req.method} ${c.req.url}`);
   await next();
+  const duration = Date.now() - start;
+  console.log(`📤 ${c.req.method} ${c.req.url} - ${duration}ms`);
 });
 
 // Mount tRPC router at /trpc
@@ -44,12 +47,28 @@ app.get("/trpc", (c) => {
   return c.json({ status: "ok", message: "TRPC endpoint is available" });
 });
 
+// Health check endpoint
+app.get("/health", (c) => {
+  return c.json({ 
+    status: "ok", 
+    message: "FREQ Backend Server is running",
+    timestamp: new Date().toISOString(),
+    port: 8081,
+    endpoints: {
+      trpc: "/api/trpc",
+      health: "/api/health",
+      adminLogin: "/admin"
+    }
+  });
+});
+
 // Test endpoint for payment system
 app.get("/api/health", (c) => {
   return c.json({ 
     status: "ok", 
-    message: "Backend is running",
+    message: "FREQ API is running",
     timestamp: new Date().toISOString(),
+    port: 8081,
     endpoints: {
       trpc: "/api/trpc",
       health: "/api/health"

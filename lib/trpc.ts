@@ -35,16 +35,26 @@ export const testServerConnection = async (): Promise<boolean> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout for connection test
     
-    const response = await fetch(`${getBaseUrl()}/api`, {
+    console.log(`🔍 Testing server connection to: ${getBaseUrl()}/health`);
+    
+    const response = await fetch(`${getBaseUrl()}/health`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
     });
     
     clearTimeout(timeoutId);
-    return response.ok;
+    const isConnected = response.ok;
+    console.log(`🔗 Server connection test: ${isConnected ? '✅ Connected' : '❌ Failed'}`);
+    
+    if (isConnected) {
+      const data = await response.json();
+      console.log(`📊 Server status:`, data);
+    }
+    
+    return isConnected;
   } catch (error) {
-    console.log('Server connection test failed:', error);
+    console.log('❌ Server connection test failed:', error);
     return false;
   }
 };
@@ -74,11 +84,14 @@ export const trpcClient = createTRPCClient<AppRouter>({
           clearTimeout(timeoutId);
           return response;
         } catch (error: unknown) {
-          console.error('Network request failed:', error);
-          if (error instanceof Error && error.name === 'AbortError') {
-            throw new Error('Request timeout. Please check your connection and try again.');
+          console.error('❌ Network request failed:', error);
+          if (error instanceof Error) {
+            if (error.name === 'AbortError') {
+              throw new Error('Request timeout. Please check your connection and try again.');
+            }
+            throw new Error(`Network request failed: ${error.message}. Please ensure the backend server is running on port 8081.`);
           }
-          throw new Error('Network request failed. Please ensure the backend server is running.');
+          throw new Error('Network request failed. Please ensure the backend server is running on port 8081.');
         }
       },
     }),

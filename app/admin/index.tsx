@@ -45,8 +45,10 @@ export default function AdminLogin() {
       // Handle different types of errors
       let errorMessage = 'Invalid credentials. Please check your username and password.';
       
+      console.error('🚨 Login attempt failed:', error);
+      
       if (error.message.includes('Network request failed') || error.message.includes('Failed to fetch')) {
-        errorMessage = 'Unable to connect to server. Please ensure the backend server is running and try again.';
+        errorMessage = 'Unable to connect to server. Please ensure the backend server is running on port 8081 and try again.\n\nTo start server: bun run start:server';
       } else if (error.message.includes('timeout')) {
         errorMessage = 'Connection timeout. Please check your internet connection and try again.';
       } else if (error.data?.code === 'UNAUTHORIZED') {
@@ -54,7 +56,6 @@ export default function AdminLogin() {
       }
       
       Alert.alert('Login Failed', errorMessage);
-      console.error('Login error:', error);
     }
   });
 
@@ -73,6 +74,7 @@ export default function AdminLogin() {
       
       if (serverAvailable) {
         try {
+          console.log('🔐 Attempting backend authentication...');
           // Use tRPC backend for authentication
           await loginMutation.mutateAsync({
             username: username.trim(),
@@ -80,9 +82,11 @@ export default function AdminLogin() {
           });
           return; // Exit early if backend login succeeds
         } catch (error) {
-          console.error('Backend login failed, falling back to offline mode:', error);
+          console.error('🚨 Backend login failed, falling back to offline mode:', error);
           // Continue to fallback authentication below
         }
+      } else {
+        console.log('⚠️ Backend server not available, using offline mode');
       }
       
       // Fallback authentication (offline mode)
@@ -202,7 +206,7 @@ export default function AdminLogin() {
               Backend Server: {typeof window !== 'undefined' ? 'http://localhost:8081' : 'http://localhost:8081'}
             </Text>
             <Text style={styles.serverNote}>
-              Note: Start backend with "bun run server.ts" for full functionality
+              Start backend: "bun run start:server" • Test: "bun run test:connection"
             </Text>
           </View>
         </View>
