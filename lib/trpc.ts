@@ -75,7 +75,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
           return response;
         } catch (error) {
           console.error('Network request failed:', error);
-          if (error.name === 'AbortError') {
+          if (error instanceof Error && error.name === 'AbortError') {
             throw new Error('Request timeout. Please check your connection and try again.');
           }
           throw new Error('Network request failed. Please ensure the backend server is running.');
