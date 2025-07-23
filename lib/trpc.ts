@@ -33,7 +33,7 @@ const getBaseUrl = () => {
 export const testServerConnection = async (): Promise<boolean> => {
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for connection test
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout for connection test
     
     const response = await fetch(`${getBaseUrl()}/api`, {
       method: 'GET',
@@ -73,7 +73,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
           
           clearTimeout(timeoutId);
           return response;
-        } catch (error) {
+        } catch (error: unknown) {
           console.error('Network request failed:', error);
           if (error instanceof Error && error.name === 'AbortError') {
             throw new Error('Request timeout. Please check your connection and try again.');

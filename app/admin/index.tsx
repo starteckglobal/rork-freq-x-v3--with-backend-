@@ -66,51 +66,54 @@ export default function AdminLogin() {
 
     setIsLoading(true);
     
-    // First test server connectivity
-    const serverAvailable = await testServerConnection();
-    
-    if (serverAvailable) {
+    // First check if credentials match the fallback (offline mode)
+    if (username.trim() === 'masterfreq' && password === 'freq2007') {
+      // Test server connectivity
+      const serverAvailable = await testServerConnection();
+      
+      if (serverAvailable) {
+        try {
+          // Use tRPC backend for authentication
+          await loginMutation.mutateAsync({
+            username: username.trim(),
+            password: password
+          });
+          return; // Exit early if backend login succeeds
+        } catch (error) {
+          console.error('Backend login failed, falling back to offline mode:', error);
+          // Continue to fallback authentication below
+        }
+      }
+      
+      // Fallback authentication (offline mode)
       try {
-        // Use tRPC backend for authentication
-        await loginMutation.mutateAsync({
-          username: username.trim(),
-          password: password
-        });
-      } catch (error) {
-        console.error('Login attempt failed:', error);
-        // Error handling is done in the mutation callbacks
+        console.log('Using fallback authentication (offline mode)...');
+        
+        // Create a mock token and user data
+        const mockToken = 'fallback_token_' + Date.now();
+        const mockUser = {
+          id: 'admin',
+          username: 'masterfreq',
+          role: 'admin',
+          name: 'FREQ Administrator'
+        };
+        
+        await AsyncStorage.setItem('admin_token', mockToken);
+        await AsyncStorage.setItem('admin_user', JSON.stringify(mockUser));
+        
+        setIsLoading(false);
+        Alert.alert('Success', 'Welcome to FREQ Moderator Dashboard (Offline Mode)\n\nNote: Backend server is not running. Some features may be limited.', [
+          { text: 'Continue', onPress: () => router.replace('/admin/dashboard') }
+        ]);
+      } catch (storageError) {
+        setIsLoading(false);
+        Alert.alert('Error', 'Failed to save login data. Please try again.');
+        console.error('Storage error:', storageError);
       }
     } else {
-      console.log('Backend server not available, using fallback authentication...');
-      
-      // Fallback authentication for when backend is not running
-      if (username.trim() === 'masterfreq' && password === 'freq2007') {
-        try {
-          // Create a mock token and user data
-          const mockToken = 'fallback_token_' + Date.now();
-          const mockUser = {
-            id: 'admin',
-            username: 'masterfreq',
-            role: 'admin',
-            name: 'FREQ Administrator'
-          };
-          
-          await AsyncStorage.setItem('admin_token', mockToken);
-          await AsyncStorage.setItem('admin_user', JSON.stringify(mockUser));
-          
-          setIsLoading(false);
-          Alert.alert('Success', 'Welcome to FREQ Moderator Dashboard (Offline Mode)\n\nNote: To enable full functionality, please start the backend server using "bun run server.ts"', [
-            { text: 'Continue', onPress: () => router.replace('/admin/dashboard') }
-          ]);
-        } catch (storageError) {
-          setIsLoading(false);
-          Alert.alert('Error', 'Failed to save login data. Please try again.');
-          console.error('Storage error:', storageError);
-        }
-      } else {
-        setIsLoading(false);
-        Alert.alert('Access Denied', 'Invalid credentials.\n\nBackend server is not running. Please start the server using "bun run server.ts" or use the correct credentials for offline mode.');
-      }
+      // Invalid credentials
+      setIsLoading(false);
+      Alert.alert('Access Denied', 'Invalid credentials. Please check your username and password.');
     }
   };
 
