@@ -11,6 +11,9 @@ import {
   Platform,
   Alert,
   Image,
+  TouchableWithoutFeedback,
+  Keyboard,
+  SafeAreaView,
 } from 'react-native';
 import { X, Send, Sparkles } from 'lucide-react-native';
 import { useChatbotStore } from '@/store/chatbot-store';
@@ -23,12 +26,31 @@ export default function ChatbotModal() {
   const [inputText, setInputText] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
   const { colors: currentColors } = useColorScheme();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
     if (messages.length > 0) {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }
   }, [messages]);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+      // Scroll to bottom when keyboard appears
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
@@ -108,10 +130,12 @@ export default function ChatbotModal() {
       presentationStyle="pageSheet"
       onRequestClose={() => setIsOpen(false)}
     >
-      <KeyboardAvoidingView
-        style={[styles.container, { backgroundColor: currentColors.background }]}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <SafeAreaView style={[styles.container, { backgroundColor: currentColors.background }]}>
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: currentColors.border }]}>
           <View style={styles.headerLeft}>
@@ -140,12 +164,15 @@ export default function ChatbotModal() {
         </View>
 
         {/* Messages */}
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={[styles.messagesContent, { flexGrow: 1 }]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+          >
           {messages.length === 0 && (
             <View style={styles.welcomeContainer}>
               <View style={styles.welcomeIcon}>
@@ -252,10 +279,11 @@ export default function ChatbotModal() {
               </View>
             </View>
           )}
-        </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
 
         {/* Input */}
-        <View style={[styles.inputContainer, { borderTopColor: currentColors.border }]}>
+        <View style={[styles.inputContainer, { borderTopColor: currentColors.border, backgroundColor: currentColors.background }]}>
           <TextInput
             style={[
               styles.textInput,
@@ -272,6 +300,10 @@ export default function ChatbotModal() {
             multiline
             maxLength={1000}
             editable={!isLoading}
+            textAlignVertical="top"
+            returnKeyType="send"
+            onSubmitEditing={sendMessage}
+            blurOnSubmit={false}
           />
           <Pressable
             style={[
@@ -284,13 +316,17 @@ export default function ChatbotModal() {
             <Send size={20} color="#FFFFFF" />
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  keyboardContainer: {
     flex: 1,
   },
   header: {
@@ -336,6 +372,7 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 20,
+    paddingBottom: 10,
   },
   welcomeContainer: {
     alignItems: 'center',
@@ -431,8 +468,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === 'ios' ? 16 : 20,
     borderTopWidth: 1,
+    minHeight: 72,
   },
   textInput: {
     flex: 1,
@@ -441,8 +480,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
+    minHeight: 40,
     maxHeight: 100,
     marginRight: 12,
+    textAlignVertical: 'top',
   },
   sendButton: {
     width: 40,
