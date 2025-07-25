@@ -21,6 +21,7 @@
     "@trpc/react-query": "^11.4.3",
     "@trpc/server": "^11.4.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/react-dom": "^19.0.0",
     "concurrently": "^9.2.0",
     "expo": "^53.0.9",
     "expo-blur": "~14.1.4",
@@ -62,7 +63,7 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@expo/ngrok": "^4.1.0",
-    "@types/react": "~18.3.12",
+    "@types/react": "^19.0.0",
     "typescript": "~5.3.3"
   },
   "private": true
