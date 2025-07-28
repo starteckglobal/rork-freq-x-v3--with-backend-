@@ -30,10 +30,12 @@ export interface BSidesState {
   unsubscribe: () => void;
   isSubscribed: () => boolean;
   uploadTrack: (title: string, description: string, artistId: string, artistName: string) => string;
+  editTrack: (trackId: string, title: string, description: string) => void;
   deleteTrack: (trackId: string) => void;
   getTracksByArtist: (artistId: string) => BSideTrack[];
   likeTrack: (trackId: string) => void;
   playTrack: (trackId: string) => void;
+  toggleTrackVisibility: (trackId: string) => void;
 }
 
 // Mock B-sides tracks for demo
@@ -137,6 +139,19 @@ export const useBSidesStore = create<BSidesState>()(
         return newTrack.id;
       },
       
+      editTrack: (trackId, title, description) => {
+        const { bsideTracks } = get();
+        const updatedTracks = bsideTracks.map(track => 
+          track.id === trackId 
+            ? { ...track, title: title.trim(), description: description.trim() }
+            : track
+        );
+        
+        set({ bsideTracks: updatedTracks });
+        
+        console.log('B-side track edited:', trackId);
+      },
+      
       deleteTrack: (trackId) => {
         const { bsideTracks } = get();
         const updatedTracks = bsideTracks.filter(track => track.id !== trackId);
@@ -175,6 +190,12 @@ export const useBSidesStore = create<BSidesState>()(
         set({ bsideTracks: updatedTracks });
         
         console.log('B-side track played:', trackId);
+      },
+      
+      toggleTrackVisibility: (trackId) => {
+        // In a real app, this would toggle a visibility property on the track
+        // For now, we'll just log the action
+        console.log('B-side track visibility toggled:', trackId);
       },
     }),
     {

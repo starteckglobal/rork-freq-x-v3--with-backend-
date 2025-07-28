@@ -29,7 +29,8 @@ import {
   Play,
   Crown,
   Star,
-  Shield
+  Shield,
+  Castle
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
@@ -44,6 +45,11 @@ import FollowersModal from '@/components/FollowersModal';
 import { users } from '@/mocks/users';
 import { Track } from '@/types/audio';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBSidesStore, BSideTrack } from '@/store/bsides-store';
+import BSidesUploadModal from '@/components/BSidesUploadModal';
+import BSidesEditModal from '@/components/BSidesEditModal';
+import BSidesSubscriptionModal from '@/components/BSidesSubscriptionModal';
+import BSidesManagement from '@/components/BSidesManagement';
 
 const { width } = Dimensions.get('window');
 
@@ -62,8 +68,26 @@ export default function ProfileScreen() {
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showBSidesUploadModal, setShowBSidesUploadModal] = useState(false);
+  const [showBSidesEditModal, setShowBSidesEditModal] = useState(false);
+  const [showBSidesSubscriptionModal, setShowBSidesSubscriptionModal] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<BSideTrack | null>(null);
+  const [bsidesView, setBSidesView] = useState<'list' | 'manage'>('list');
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  
+  // B-sides store
+  const {
+    bsideTracks,
+    isSubscribed: isBSidesSubscribed,
+    subscribe: subscribeToBSides,
+    uploadTrack: uploadBSideTrack,
+    editTrack: editBSideTrack,
+    deleteTrack: deleteBSideTrack,
+    getTracksByArtist,
+    playTrack: playBSideTrack,
+    toggleTrackVisibility
+  } = useBSidesStore();
   
   // Get followers and following from user store or default to empty arrays
   const following = currentUser?.following || [];
@@ -150,6 +174,55 @@ export default function ProfileScreen() {
   const handleAdminAccess = () => {
     setShowAdminModal(true);
   };
+  
+  // B-sides handlers
+  const handleBSidesUpload = () => {
+    if (!currentUser) return;
+    
+    const hasAccess = isBSidesSubscribed() || currentUser.username === 'demo';
+    
+    if (hasAccess) {
+      setShowBSidesUploadModal(true);
+    } else {
+      setShowBSidesSubscriptionModal(true);
+    }
+  };
+  
+  const handleBSidesEdit = (track: BSideTrack) => {
+    setEditingTrack(track);
+    setShowBSidesEditModal(true);
+  };
+  
+  const handleBSidesUploadSubmit = (title: string, description: string) => {
+    if (!currentUser) return;
+    
+    uploadBSideTrack(title, description, currentUser.id, currentUser.displayName);
+    setShowBSidesUploadModal(false);
+  };
+  
+  const handleBSidesEditSubmit = (trackId: string, title: string, description: string) => {
+    editBSideTrack(trackId, title, description);
+    setShowBSidesEditModal(false);
+    setEditingTrack(null);
+  };
+  
+  const handleBSidesPlay = (track: BSideTrack) => {
+    playBSideTrack(track.id);
+    // In a real app, you would also play the actual audio
+    console.log('Playing B-side track:', track.title);
+  };
+  
+  const handleBSidesDelete = (trackId: string) => {
+    deleteBSideTrack(trackId);
+  };
+  
+  const handleBSidesVisibilityToggle = (trackId: string) => {
+    toggleTrackVisibility(trackId);
+  };
+  
+  // Get user's B-sides tracks
+  const userBSidesTracks = currentUser ? getTracksByArtist(currentUser.id) : [];
+  const hasBSidesAccess = currentUser && (isBSidesSubscribed() || currentUser.username === 'demo');
   
   // Calculate content padding based on player state
   const getContentPaddingBottom = () => {
@@ -557,6 +630,146 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
         
+        {/* B-sides Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionTitleContainer}>
+              <Castle size={20} color={colors.primary} />
+              <Text style={styles.sectionTitle}>B-sides</Text>
+              {hasBSidesAccess && (
+                <View style={styles.subscriptionBadge}>
+                  <Crown size={12} color="#FFF" />
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.bsidesHeaderActions}>
+              {hasBSidesAccess && userBSidesTracks.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.bsidesViewToggle}
+                  onPress={() => setBSidesView(bsidesView === 'list' ? 'manage' : 'list')}
+                >
+                  <Text style={styles.bsidesViewToggleText}>
+                    {bsidesView === 'list' ? 'Manage' : 'View'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity onPress={handleBSidesUpload}>
+                <Upload size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          {hasBSidesAccess ? (
+            bsidesView === 'manage' ? (
+              <BSidesManagement
+                tracks={userBSidesTracks}
+                onAddTrack={handleBSidesUpload}
+                onEditTrack={handleBSidesEdit}
+                onDeleteTrack={handleBSidesDelete}
+                onPlayTrack={handleBSidesPlay}
+                onToggleVisibility={handleBSidesVisibilityToggle}
+              />
+            ) : (
+              userBSidesTracks.length > 0 ? (
+                <View style={styles.bsidesContainer}>
+                  <Text style={styles.bsidesDescription}>
+                    Exclusive tracks for your subscribers • {userBSidesTracks.length} track{userBSidesTracks.length !== 1 ? 's' : ''}
+                  </Text>
+                  
+                  <View style={styles.bsidesTracksList}>
+                    {userBSidesTracks.slice(0, 3).map(track => (
+                      <View key={track.id} style={styles.bsidesTrackItem}>
+                        <TouchableOpacity 
+                          style={styles.bsidesPlayButton}
+                          onPress={() => handleBSidesPlay(track)}
+                        >
+                          <Play size={14} color={colors.text} fill={colors.text} />
+                        </TouchableOpacity>
+                        
+                        <View style={styles.bsidesTrackInfo}>
+                          <Text style={styles.bsidesTrackTitle} numberOfLines={1}>
+                            {track.title}
+                          </Text>
+                          <Text style={styles.bsidesTrackMeta}>
+                            {track.plays} plays • {track.likes} likes
+                          </Text>
+                        </View>
+                        
+                        <TouchableOpacity 
+                          style={styles.bsidesEditButton}
+                          onPress={() => handleBSidesEdit(track)}
+                        >
+                          <Edit size={14} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                    
+                    {userBSidesTracks.length > 3 && (
+                      <TouchableOpacity 
+                        style={styles.viewAllBSidesButton}
+                        onPress={() => setBSidesView('manage')}
+                      >
+                        <Text style={styles.viewAllBSidesText}>
+                          View All {userBSidesTracks.length} B-sides
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.bsidesEmptyState}>
+                  <Castle size={32} color={colors.textSecondary} />
+                  <Text style={styles.bsidesEmptyStateText}>
+                    Upload exclusive content for your subscribers
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.bsidesUploadButton}
+                    onPress={handleBSidesUpload}
+                  >
+                    <Upload size={16} color={colors.text} />
+                    <Text style={styles.bsidesUploadButtonText}>Upload B-side</Text>
+                  </TouchableOpacity>
+                </View>
+              )
+            )
+          ) : (
+            <View style={styles.bsidesPaywall}>
+              <View style={styles.bsidesPaywallContent}>
+                <Castle size={48} color={colors.primary} />
+                <Text style={styles.bsidesPaywallTitle}>B-sides Premium</Text>
+                <Text style={styles.bsidesPaywallDescription}>
+                  Upload exclusive tracks for your fans. Share demos, acoustic versions, and unreleased content.
+                </Text>
+                
+                <View style={styles.bsidesFeatures}>
+                  <View style={styles.bsidesFeatureItem}>
+                    <Star size={16} color={colors.primary} />
+                    <Text style={styles.bsidesFeatureText}>Unlimited uploads</Text>
+                  </View>
+                  <View style={styles.bsidesFeatureItem}>
+                    <Crown size={16} color={colors.primary} />
+                    <Text style={styles.bsidesFeatureText}>Subscriber-only content</Text>
+                  </View>
+                  <View style={styles.bsidesFeatureItem}>
+                    <BarChart size={16} color={colors.primary} />
+                    <Text style={styles.bsidesFeatureText}>Advanced analytics</Text>
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  style={styles.bsidesSubscribeButton}
+                  onPress={() => setShowBSidesSubscriptionModal(true)}
+                >
+                  <Crown size={20} color="#FFF" />
+                  <Text style={styles.bsidesSubscribeText}>Subscribe for $9.99/month</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
+        
         <TouchableOpacity 
           style={styles.logoutButton}
           onPress={handleLogout}
@@ -588,6 +801,31 @@ export default function ProfileScreen() {
       <AdminLoginModal
         visible={showAdminModal}
         onClose={() => setShowAdminModal(false)}
+      />
+      
+      <BSidesUploadModal
+        visible={showBSidesUploadModal}
+        onClose={() => setShowBSidesUploadModal(false)}
+        onUpload={handleBSidesUploadSubmit}
+      />
+      
+      <BSidesEditModal
+        visible={showBSidesEditModal}
+        onClose={() => {
+          setShowBSidesEditModal(false);
+          setEditingTrack(null);
+        }}
+        onSave={handleBSidesEditSubmit}
+        track={editingTrack}
+      />
+      
+      <BSidesSubscriptionModal
+        visible={showBSidesSubscriptionModal}
+        onClose={() => setShowBSidesSubscriptionModal(false)}
+        onSubscribe={() => {
+          subscribeToBSides();
+          setShowBSidesSubscriptionModal(false);
+        }}
       />
     </SafeAreaView>
   );
@@ -979,6 +1217,158 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   syncLabSubscribeText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // B-sides styles
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bsidesHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  bsidesViewToggle: {
+    backgroundColor: colors.cardElevated,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  bsidesViewToggleText: {
+    color: colors.text,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  bsidesContainer: {
+    marginTop: 8,
+  },
+  bsidesDescription: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  bsidesTracksList: {
+    gap: 12,
+  },
+  bsidesTrackItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.cardElevated,
+    borderRadius: 8,
+    padding: 12,
+    gap: 12,
+  },
+  bsidesPlayButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bsidesTrackInfo: {
+    flex: 1,
+  },
+  bsidesTrackTitle: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  bsidesTrackMeta: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  bsidesEditButton: {
+    padding: 4,
+  },
+  viewAllBSidesButton: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  viewAllBSidesText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bsidesEmptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  bsidesEmptyStateText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    marginTop: 12,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  bsidesUploadButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    gap: 8,
+  },
+  bsidesUploadButtonText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bsidesPaywall: {
+    backgroundColor: colors.cardElevated,
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 8,
+  },
+  bsidesPaywallContent: {
+    alignItems: 'center',
+  },
+  bsidesPaywallTitle: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  bsidesPaywallDescription: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  bsidesFeatures: {
+    alignSelf: 'stretch',
+    marginBottom: 24,
+  },
+  bsidesFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
+  bsidesFeatureText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  bsidesSubscribeButton: {
+    flexDirection: 'row',
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  bsidesSubscribeText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
