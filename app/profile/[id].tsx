@@ -19,7 +19,10 @@ import {
   Plus,
   Users,
   UserCheck,
-  MessageCircle
+  MessageCircle,
+  Music,
+  Crown,
+  Upload
 } from 'lucide-react-native';
 import TrackList from '@/components/TrackList';
 import MiniPlayer from '@/components/MiniPlayer';
@@ -30,6 +33,10 @@ import { usePlayerStore } from '@/store/player-store';
 import { defaultAvatarUri } from '@/constants/images';
 import FollowersModal from '@/components/FollowersModal';
 import { useUserStore } from '@/store/user-store';
+import { useBSidesStore } from '@/store/bsides-store';
+import BSidesUploadModal from '@/components/BSidesUploadModal';
+import BSidesSubscriptionModal from '@/components/BSidesSubscriptionModal';
+import BSidesTrackList from '@/components/BSidesTrackList';
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams();
@@ -37,7 +44,10 @@ export default function UserProfileScreen() {
   const { currentTrack, isMinimized } = usePlayerStore();
   const [showFollowersModal, setShowFollowersModal] = useState(false);
   const [showFollowingModal, setShowFollowingModal] = useState(false);
-  const { followUser, unfollowUser, isFollowing: checkIsFollowing } = useUserStore();
+  const [showBSidesUpload, setShowBSidesUpload] = useState(false);
+  const [showBSidesSubscription, setShowBSidesSubscription] = useState(false);
+  const { followUser, unfollowUser, isFollowing: checkIsFollowing, currentUser } = useUserStore();
+  const { isSubscribed, subscribe, uploadTrack, getTracksByArtist, likeTrack, playTrack } = useBSidesStore();
   const [isFollowing, setIsFollowing] = useState(false);
   
   const userId = id ? String(id) : '';
@@ -78,6 +88,15 @@ export default function UserProfileScreen() {
   
   // Filter tracks by this artist
   const userTracks = tracks.filter(track => track.artistId === user.id);
+  
+  // Get B-sides tracks for this artist
+  const bsideTracks = getTracksByArtist(user.id);
+  
+  // Check if current user is viewing their own profile
+  const isOwnProfile = currentUser?.id === user.id;
+  
+  // Check if user has B-sides subscription or is demo account
+  const hasAccess = isSubscribed() || user.username === 'demo' || (currentUser && currentUser.username === 'demo');
   
   const toggleFollow = () => {
     if (!userId) return;
@@ -282,6 +301,33 @@ export default function UserProfileScreen() {
     }
   };
   
+  const handleBSidesUpload = () => {
+    if (!hasAccess) {
+      setShowBSidesSubscription(true);
+      return;
+    }
+    setShowBSidesUpload(true);
+  };
+  
+  const handleUploadTrack = (title: string, description: string) => {
+    if (currentUser) {
+      uploadTrack(title, description, currentUser.id, currentUser.displayName);
+    }
+  };
+  
+  const handleSubscribe = () => {
+    subscribe();
+  };
+  
+  const handleTrackPlay = (track: any) => {
+    playTrack(track.id);
+    console.log('Playing B-side track:', track.title);
+  };
+  
+  const handleTrackLike = (trackId: string) => {
+    likeTrack(trackId);
+  };
+  
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ 
@@ -405,6 +451,69 @@ export default function UserProfileScreen() {
             </View>
           )}
         </View>
+        
+        {/* B-sides Section */}
+        <View style={styles.bsidesContainer}>
+          <View style={styles.bsidesHeader}>
+            <View style={styles.bsidesTitle}>
+              <Music size={20} color={colors.primary} />
+              <Text style={styles.bsidesTitleText}>B-sides</Text>
+              {hasAccess && <Crown size={16} color={colors.primary} />}
+            </View>
+            
+            {isOwnProfile && (
+              <TouchableOpacity 
+                style={styles.bsidesUploadButton}
+                onPress={handleBSidesUpload}
+              >
+                <Upload size={16} color={colors.text} />
+                <Text style={styles.bsidesUploadText}>
+                  {hasAccess ? 'Upload' : 'Subscribe'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          {hasAccess ? (
+            bsideTracks.length > 0 ? (
+              <BSidesTrackList 
+                tracks={bsideTracks}
+                onTrackPress={handleTrackPlay}
+                onLikePress={handleTrackLike}
+              />
+            ) : (
+              <View style={styles.bsidesEmptyState}>
+                <Music size={32} color={colors.textSecondary} />
+                <Text style={styles.bsidesEmptyTitle}>
+                  {isOwnProfile ? 'No B-sides yet' : `${user.displayName} hasn't shared any B-sides`}
+                </Text>
+                <Text style={styles.bsidesEmptyText}>
+                  {isOwnProfile 
+                    ? 'Upload exclusive content for your fans'
+                    : 'Exclusive tracks will appear here'
+                  }
+                </Text>
+              </View>
+            )
+          ) : (
+            <View style={styles.bsidesPaywall}>
+              <View style={styles.paywallContent}>
+                <Crown size={32} color={colors.primary} />
+                <Text style={styles.paywallTitle}>Exclusive B-sides</Text>
+                <Text style={styles.paywallText}>
+                  Subscribe for $9.99/month to access {user.displayName}'s exclusive content
+                </Text>
+                <TouchableOpacity 
+                  style={styles.paywallButton}
+                  onPress={() => setShowBSidesSubscription(true)}
+                >
+                  <Crown size={16} color={colors.text} />
+                  <Text style={styles.paywallButtonText}>Subscribe for $9.99/month</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </View>
       </ScrollView>
       
       {currentTrack && isMinimized && <MiniPlayer />}
@@ -421,6 +530,18 @@ export default function UserProfileScreen() {
         onClose={() => setShowFollowingModal(false)}
         title="Following"
         users={users.slice(1, 4)} // Mock following
+      />
+      
+      <BSidesUploadModal
+        visible={showBSidesUpload}
+        onClose={() => setShowBSidesUpload(false)}
+        onUpload={handleUploadTrack}
+      />
+      
+      <BSidesSubscriptionModal
+        visible={showBSidesSubscription}
+        onClose={() => setShowBSidesSubscription(false)}
+        onSubscribe={handleSubscribe}
       />
     </SafeAreaView>
   );
@@ -576,6 +697,97 @@ const styles = StyleSheet.create({
   notFoundText: {
     color: colors.textSecondary,
     fontSize: 18,
+    fontWeight: '600',
+  },
+  // B-sides styles
+  bsidesContainer: {
+    padding: 16,
+    marginTop: 8,
+  },
+  bsidesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  bsidesTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  bsidesTitleText: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  bsidesUploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    gap: 6,
+  },
+  bsidesUploadText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  bsidesEmptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+  },
+  bsidesEmptyTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  bsidesEmptyText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  bsidesPaywall: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 24,
+  },
+  paywallContent: {
+    alignItems: 'center',
+  },
+  paywallTitle: {
+    color: colors.text,
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  paywallText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  paywallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    gap: 8,
+  },
+  paywallButtonText: {
+    color: colors.text,
+    fontSize: 16,
     fontWeight: '600',
   },
 });
