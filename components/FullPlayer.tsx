@@ -23,7 +23,8 @@ import {
   ChevronDown, 
   Volume2,
   RotateCcw,
-  RotateCw
+  RotateCw,
+  X
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { usePlayerStore } from '@/store/player-store';
@@ -50,6 +51,7 @@ export default function FullPlayer() {
     playNext, 
     playPrevious, 
     minimizePlayer,
+    closePlayer,
     isMinimized,
     waveformData,
     generateWaveformData
@@ -245,6 +247,11 @@ export default function FullPlayer() {
     minimizePlayer();
   };
   
+  const handleClose = () => {
+    trackInteraction('close');
+    closePlayer();
+  };
+  
   const handleShare = () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
@@ -333,22 +340,9 @@ export default function FullPlayer() {
           
           <TouchableOpacity 
             style={styles.headerButton}
-            onPress={() => {
-              trackInteraction('more_options');
-              
-              // Track more options
-              analyticsEventBus.publish('custom_event', {
-                category: 'ui_interaction',
-                action: 'more_options',
-                track_id: currentTrack.id,
-                source: 'full_player',
-              });
-              
-              // More options
-              alert('More options would be implemented here');
-            }}
+            onPress={handleClose}
           >
-            <MoreHorizontal size={24} color="rgba(255,255,255,0.9)" />
+            <X size={24} color="rgba(255,255,255,0.9)" />
           </TouchableOpacity>
         </View>
         

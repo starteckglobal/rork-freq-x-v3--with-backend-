@@ -8,7 +8,7 @@ import {
   Dimensions,
   Platform
 } from 'react-native';
-import { Play, Pause, SkipForward, Heart } from 'lucide-react-native';
+import { Play, Pause, SkipForward, Heart, X } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { usePlayerStore } from '@/store/player-store';
 import { useUserStore } from '@/store/user-store';
@@ -23,6 +23,7 @@ export default function MiniPlayer() {
     togglePlay, 
     playNext, 
     maximizePlayer,
+    closePlayer,
     isMinimized
   } = usePlayerStore();
   
@@ -58,6 +59,11 @@ export default function MiniPlayer() {
   const handlePlayNext = (e: any) => {
     e.stopPropagation();
     playNext();
+  };
+  
+  const handleClose = (e: any) => {
+    e.stopPropagation();
+    closePlayer();
   };
   
   return (
@@ -108,6 +114,13 @@ export default function MiniPlayer() {
           onPress={handlePlayNext}
         >
           <SkipForward size={20} color={colors.text} />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.controlButton}
+          onPress={handleClose}
+        >
+          <X size={18} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

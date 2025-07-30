@@ -41,6 +41,7 @@ export interface PlayerStore {
   // UI controls
   maximizePlayer: () => void;
   minimizePlayer: () => void;
+  closePlayer: () => void;
   
   // Waveform controls
   generateWaveformData: () => void;
@@ -617,6 +618,30 @@ export const usePlayerStore = create<PlayerStore>()(
         }
         
         set({ isMinimized: true });
+      },
+      
+      closePlayer: () => {
+        const currentTrack = get().currentTrack;
+        
+        try {
+          // Track player close
+          analyticsEventBus.publish('custom_event', {
+            category: 'ui',
+            action: 'close_player',
+            track_id: currentTrack?.id,
+            track_title: currentTrack?.title,
+          });
+        } catch (error) {
+          console.error('Error publishing analytics event:', error);
+        }
+        
+        // Stop playback and clear player state
+        set({ 
+          currentTrack: null,
+          playerState: 'stopped',
+          currentTime: 0,
+          isMinimized: true
+        });
       },
       
       generateWaveformData: () => {
