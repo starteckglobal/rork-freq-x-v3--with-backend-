@@ -191,7 +191,6 @@ export default function WaveformVisualizer({
   
   // Create dynamic props for Pressable
   const pressableProps: any = {
-    ref: containerRef,
     style: [styles.container, style],
     onLayout: handleLayout,
     onPress: handlePress,
@@ -221,7 +220,7 @@ export default function WaveformVisualizer({
   }, [progressAnim]);
   
   return (
-    <Pressable {...pressableProps}>
+    <Pressable ref={containerRef} {...pressableProps}>
       <View style={styles.waveformContainer}>
         {waveformData.map((value, index) => {
           const barLeft = index * (barWidth + 1);
