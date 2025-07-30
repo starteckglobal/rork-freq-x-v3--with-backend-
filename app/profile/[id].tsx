@@ -23,7 +23,7 @@ import {
   Music,
   Crown,
   Upload,
-  Disc
+  CassetteTape
 } from 'lucide-react-native';
 import TrackList from '@/components/TrackList';
 import MiniPlayer from '@/components/MiniPlayer';
@@ -457,7 +457,7 @@ export default function UserProfileScreen() {
         <View style={styles.bsidesContainer}>
           <View style={styles.bsidesHeader}>
             <View style={styles.bsidesTitle}>
-              <Disc size={20} color={colors.primary} />
+              <CassetteTape size={20} color={colors.primary} />
               <Text style={styles.bsidesTitleText}>B-sides</Text>
               {hasAccess && <Crown size={16} color={colors.primary} />}
             </View>
@@ -484,7 +484,7 @@ export default function UserProfileScreen() {
               />
             ) : (
               <View style={styles.bsidesEmptyState}>
-                <Disc size={32} color={colors.textSecondary} />
+                <CassetteTape size={32} color={colors.textSecondary} />
                 <Text style={styles.bsidesEmptyTitle}>
                   {isOwnProfile ? 'No B-sides yet' : `${user.displayName} hasn't shared any B-sides`}
                 </Text>

@@ -8,7 +8,7 @@ import {
   Modal,
   TouchableOpacity
 } from 'react-native';
-import { X, Crown, Disc, Upload, Users, Star } from 'lucide-react-native';
+import { X, Crown, CassetteTape, Upload, Users, Star } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 
 interface BSidesSubscriptionModalProps {
@@ -55,7 +55,7 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
           <View style={styles.heroSection}>
             <View style={styles.iconContainer}>
-              <Disc size={48} color={colors.primary} />
+              <CassetteTape size={48} color={colors.primary} />
               <Crown size={24} color={colors.primary} style={styles.crownIcon} />
             </View>
             <Text style={styles.heroTitle}>Unlock B-sides</Text>

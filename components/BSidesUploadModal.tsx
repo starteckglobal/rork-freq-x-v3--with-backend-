@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   TextInput
 } from 'react-native';
-import { X, Upload, Disc } from 'lucide-react-native';
+import { X, Upload, CassetteTape } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 
 interface BSidesUploadModalProps {
@@ -94,7 +94,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
               onPress={handleFileSelect}
               disabled={isUploading}
             >
-              <Disc size={32} color={colors.primary} />
+              <CassetteTape size={32} color={colors.primary} />
               <Text style={styles.fileUploadText}>Select Audio File</Text>
               <Text style={styles.fileUploadSubtext}>MP3, WAV, M4A supported</Text>
             </TouchableOpacity>
