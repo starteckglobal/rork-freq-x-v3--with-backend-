@@ -381,9 +381,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 60, // Increased height for better touch target
-    marginHorizontal: 16, // Center with equal margins
-    alignSelf: 'center',
-    maxWidth: 400, // Prevent too wide on tablets
   },
   searchIcon: {
     marginRight: 8,
@@ -476,7 +473,6 @@ const styles = StyleSheet.create({
   styledSearchInput: {
     flex: 1,
     maxWidth: '100%',
-    alignSelf: 'center',
   },
   clearButton: {
     position: 'absolute',

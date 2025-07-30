@@ -464,15 +464,11 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 12,
     gap: 8,
-    marginHorizontal: 16,
-    alignSelf: 'center',
-    maxWidth: 400,
   },
   searchInput: {
     flex: 1,
     color: colors.text,
     fontSize: 16,
-    textAlign: 'center',
   },
   filtersRow: {
     flexDirection: 'row',

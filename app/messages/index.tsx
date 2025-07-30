@@ -424,15 +424,12 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 12,
     borderRadius: 8,
-    alignSelf: 'center',
-    maxWidth: 400,
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
     color: colors.text,
     fontSize: 16,
-    textAlign: 'center',
   },
   tabsContainer: {
     flexDirection: 'row',
