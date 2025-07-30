@@ -374,6 +374,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#374151',
+    alignSelf: 'center',
+    maxWidth: 400,
   },
   searchInput: {
     flex: 1,
@@ -381,6 +383,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 16,
     color: '#FFFFFF',
+    textAlign: 'center',
   },
   filtersContainer: {
     marginBottom: 8,

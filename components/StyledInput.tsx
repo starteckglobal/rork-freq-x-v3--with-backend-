@@ -37,7 +37,8 @@ export default function StyledInput({ shortcut, containerStyle, style, ...props 
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    maxWidth: 280,
+    maxWidth: 400,
+    alignSelf: 'center',
   },
   gradientBorder: {
     borderRadius: 12,
@@ -70,6 +71,7 @@ const styles = StyleSheet.create({
     color: colors.text,
     backgroundColor: 'transparent',
     borderWidth: 0,
+    textAlign: 'center',
   },
   shortcut: {
     position: 'absolute',
