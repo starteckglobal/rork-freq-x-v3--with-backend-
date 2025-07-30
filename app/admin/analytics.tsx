@@ -31,7 +31,7 @@ export default function Analytics() {
   });
 
   const { data: usersData } = trpc.analytics.users.useQuery({
-    period: timePeriod === '1y' ? '90d' : timePeriod,
+    period: timePeriod,
     metric: 'growth',
   });
 

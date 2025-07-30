@@ -3,7 +3,7 @@ import { requirePermission } from '../../create-context';
 import { mockAnalytics } from '../../../database/mock-data';
 
 const overviewSchema = z.object({
-  period: z.enum(['24h', '7d', '30d', '90d']).optional().default('30d'),
+  period: z.enum(['24h', '7d', '30d', '90d', '1y']).optional().default('30d'),
 });
 
 export const overviewAnalyticsProcedure = requirePermission('analytics:view')
@@ -20,6 +20,7 @@ export const overviewAnalyticsProcedure = requirePermission('analytics:view')
       '7d': 0.3,
       '30d': 1.0,
       '90d': 2.5,
+      '1y': 12.0,
     };
     
     const multiplier = periodMultipliers[input.period];
