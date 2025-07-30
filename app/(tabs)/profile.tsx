@@ -637,7 +637,7 @@ export default function ProfileScreen() {
               <Castle size={20} color={colors.primary} />
               <Text style={styles.sectionTitle}>B-sides</Text>
               {hasBSidesAccess && (
-                <View style={styles.subscriptionBadge}>
+                <View style={styles.bsidesCrownBadge}>
                   <Crown size={12} color="#FFF" />
                 </View>
               )}
@@ -1226,6 +1226,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  bsidesCrownBadge: {
+    backgroundColor: colors.primary,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   bsidesHeaderActions: {
     flexDirection: 'row',
