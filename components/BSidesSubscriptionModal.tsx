@@ -3,10 +3,10 @@ import {
   StyleSheet,
   Text,
   View,
-  Modal,
-  TouchableOpacity,
   Alert,
   ScrollView,
+  Modal,
+  TouchableOpacity
 } from 'react-native';
 import { X, Crown, Disc, Upload, Users, Star } from 'lucide-react-native';
 import { colors } from '@/constants/colors';

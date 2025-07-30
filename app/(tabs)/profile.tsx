@@ -3,13 +3,13 @@ import {
   StyleSheet, 
   Text, 
   View, 
-  SafeAreaView, 
   Image, 
-  TouchableOpacity, 
   ScrollView, 
   Alert,
   Dimensions,
-  Platform
+  Platform,
+  SafeAreaView,
+  TouchableOpacity
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { 

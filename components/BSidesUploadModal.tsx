@@ -3,13 +3,13 @@ import {
   StyleSheet,
   Text,
   View,
-  Modal,
-  TouchableOpacity,
-  TextInput,
   Alert,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  Modal,
+  TouchableOpacity,
+  TextInput
 } from 'react-native';
 import { X, Upload, Disc } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
