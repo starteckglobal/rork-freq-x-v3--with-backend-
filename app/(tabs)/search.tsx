@@ -309,27 +309,29 @@ export default function SearchScreen() {
           <Text style={styles.headerTitle}>Search</Text>
         </View>
         <View style={styles.searchContainer}>
-          <StyledInput
-            placeholder="Search tracks, artists, or genres"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoCapitalize="none"
-            containerStyle={styles.styledSearchInput}
-            onSubmitEditing={() => {
-              if (searchQuery) {
-                analyticsEventBus.publish('search_query', {
-                  query: searchQuery,
-                  result_count: filteredTracks.length + filteredUsers.length,
-                  input_method: 'submit',
-                });
-              }
-            }}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
-              <X size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          )}
+          <View style={styles.searchInputWrapper}>
+            <StyledInput
+              placeholder="Search tracks, artists, or genres"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoCapitalize="none"
+              containerStyle={styles.styledSearchInput}
+              onSubmitEditing={() => {
+                if (searchQuery) {
+                  analyticsEventBus.publish('search_query', {
+                    query: searchQuery,
+                    result_count: filteredTracks.length + filteredUsers.length,
+                    input_method: 'submit',
+                  });
+                }
+              }}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={handleClearSearch} style={styles.clearButton}>
+                <X size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
       
@@ -375,12 +377,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   searchContainer: {
+    position: 'relative',
+  },
+  searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    height: 60, // Increased height for better touch target
+    position: 'relative',
   },
   searchIcon: {
     marginRight: 8,
@@ -476,12 +478,14 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     position: 'absolute',
-    right: 16,
+    right: 12,
     top: '50%',
     transform: [{ translateY: -10 }],
     zIndex: 10,
-    backgroundColor: colors.card,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 15,
-    padding: 5,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

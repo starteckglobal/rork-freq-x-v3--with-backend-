@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  X,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -239,6 +240,14 @@ export default function UserManagement() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')} 
+              style={styles.clearSearchButton}
+            >
+              <X size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
@@ -374,6 +383,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#374151',
+    position: 'relative',
   },
   searchInput: {
     flex: 1,
@@ -381,6 +391,18 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 16,
     color: '#FFFFFF',
+    paddingRight: 40,
+  },
+  clearSearchButton: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 15,
+    padding: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filtersContainer: {
     marginBottom: 8,
