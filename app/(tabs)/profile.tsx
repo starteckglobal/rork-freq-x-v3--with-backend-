@@ -32,7 +32,7 @@ import {
   Shield,
   Castle
 } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { usePlayerStore } from '@/store/player-store';
 import { defaultAvatarUri, freqLogoUrl } from '@/constants/images';
