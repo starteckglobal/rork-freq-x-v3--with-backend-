@@ -30,7 +30,7 @@ import {
   Crown,
   Star,
   Shield,
-  Castle
+  Disc
 } from 'lucide-react-native';
 import colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
@@ -634,7 +634,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionTitleContainer}>
-              <Castle size={20} color={colors.primary} />
+              <Disc size={20} color={colors.primary} />
               <Text style={styles.sectionTitle}>B-sides</Text>
               {hasBSidesAccess && (
                 <View style={styles.bsidesCrownBadge}>
@@ -720,7 +720,7 @@ export default function ProfileScreen() {
                 </View>
               ) : (
                 <View style={styles.bsidesEmptyState}>
-                  <Castle size={32} color={colors.textSecondary} />
+                  <Disc size={32} color={colors.textSecondary} />
                   <Text style={styles.bsidesEmptyStateText}>
                     Upload exclusive content for your subscribers
                   </Text>
@@ -737,7 +737,7 @@ export default function ProfileScreen() {
           ) : (
             <View style={styles.bsidesPaywall}>
               <View style={styles.bsidesPaywallContent}>
-                <Castle size={48} color={colors.primary} />
+                <Disc size={48} color={colors.primary} />
                 <Text style={styles.bsidesPaywallTitle}>B-sides Premium</Text>
                 <Text style={styles.bsidesPaywallDescription}>
                   Upload exclusive tracks for your fans. Share demos, acoustic versions, and unreleased content.
