@@ -6,10 +6,9 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity, 
-  ActivityIndicator,
-  Dimensions,
-  Platform
+  ActivityIndicator
 } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { 
   ChevronLeft, 
