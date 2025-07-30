@@ -24,14 +24,14 @@ import {
 const { width } = Dimensions.get('window');
 
 export default function Analytics() {
-  const [timePeriod, setTimePeriod] = useState<'24h' | '7d' | '30d' | '90d'>('30d');
+  const [timePeriod, setTimePeriod] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
 
   const { data: overviewData } = trpc.analytics.overview.useQuery({
     period: timePeriod,
   });
 
   const { data: usersData } = trpc.analytics.users.useQuery({
-    period: timePeriod,
+    period: timePeriod === '1y' ? '90d' : timePeriod,
     metric: 'growth',
   });
 
@@ -86,14 +86,14 @@ export default function Analytics() {
 
       {/* Time Period Selector */}
       <View style={styles.periodSelector}>
-        {(['24h', '7d', '30d', '90d'] as const).map((period) => (
+        {(['7d', '30d', '90d', '1y'] as const).map((period) => (
           <TouchableOpacity
             key={period}
             style={[styles.periodButton, timePeriod === period && styles.periodButtonActive]}
             onPress={() => setTimePeriod(period)}
           >
             <Text style={[styles.periodButtonText, timePeriod === period && styles.periodButtonTextActive]}>
-              {period === '24h' ? '24 Hours' : period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : '90 Days'}
+              {period === '7d' ? '7 Days' : period === '30d' ? '30 Days' : period === '90d' ? '90 Days' : '1 Year'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -106,28 +106,28 @@ export default function Analytics() {
           <View style={styles.metricsGrid}>
             <MetricCard
               title="Total Users"
-              value={overviewData?.metrics.totalUsers?.toLocaleString() || '0'}
+              value={overviewData?.metrics?.totalUsers?.toLocaleString() || '0'}
               change={12.5}
               icon={Users}
               color="#8B5CF6"
             />
             <MetricCard
               title="Active Users"
-              value={overviewData?.metrics.activeUsers?.toLocaleString() || '0'}
+              value={overviewData?.metrics?.activeUsers?.toLocaleString() || '0'}
               change={8.3}
               icon={TrendingUp}
               color="#10B981"
             />
             <MetricCard
               title="Total Tracks"
-              value={overviewData?.metrics.totalTracks?.toLocaleString() || '0'}
+              value={overviewData?.metrics?.totalTracks?.toLocaleString() || '0'}
               change={15.7}
               icon={Music}
               color="#06B6D4"
             />
             <MetricCard
               title="Monthly Revenue"
-              value={`${overviewData?.metrics.monthlyRevenue?.toLocaleString() || '0'}`}
+              value={`${overviewData?.metrics?.monthlyRevenue?.toLocaleString() || '0'}`}
               change={22.1}
               icon={DollarSign}
               color="#F59E0B"
@@ -150,7 +150,7 @@ export default function Analytics() {
           <Text style={styles.sectionTitle}>Content Statistics</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overviewData?.metrics.pendingReviews || 0}</Text>
+              <Text style={styles.statValue}>{overviewData?.metrics?.pendingReviews || 0}</Text>
               <Text style={styles.statLabel}>Pending Reviews</Text>
             </View>
             <View style={styles.statItem}>

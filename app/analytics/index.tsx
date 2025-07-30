@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: colors.divider,
   },
   trackRank: {
     width: 24,
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   loginButtonText: {
-    color: colors.text,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
