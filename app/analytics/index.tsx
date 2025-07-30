@@ -6,9 +6,10 @@ import {
   SafeAreaView, 
   ScrollView, 
   TouchableOpacity, 
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions,
+  Platform
 } from 'react-native';
-import { Dimensions, Platform } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { 
   ChevronLeft, 
@@ -25,7 +26,7 @@ import {
   Filter, 
   ChevronDown
 } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import { analytics } from '@/services/analytics';
 import { LineChart, BarChart as RNBarChart, PieChart } from 'react-native-chart-kit';

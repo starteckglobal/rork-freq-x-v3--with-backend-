@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
-import { Dimensions } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { trpc } from '@/lib/trpc';
 import {
@@ -106,28 +106,28 @@ export default function Analytics() {
           <View style={styles.metricsGrid}>
             <MetricCard
               title="Total Users"
-              value={overviewData?.metrics?.totalUsers?.toLocaleString() || '0'}
+              value={overviewData?.metrics.totalUsers?.toLocaleString() || '0'}
               change={12.5}
               icon={Users}
               color="#8B5CF6"
             />
             <MetricCard
               title="Active Users"
-              value={overviewData?.metrics?.activeUsers?.toLocaleString() || '0'}
+              value={overviewData?.metrics.activeUsers?.toLocaleString() || '0'}
               change={8.3}
               icon={TrendingUp}
               color="#10B981"
             />
             <MetricCard
               title="Total Tracks"
-              value={overviewData?.metrics?.totalTracks?.toLocaleString() || '0'}
+              value={overviewData?.metrics.totalTracks?.toLocaleString() || '0'}
               change={15.7}
               icon={Music}
               color="#06B6D4"
             />
             <MetricCard
               title="Monthly Revenue"
-              value={`${overviewData?.metrics?.monthlyRevenue?.toLocaleString() || '0'}`}
+              value={`${overviewData?.metrics.monthlyRevenue?.toLocaleString() || '0'}`}
               change={22.1}
               icon={DollarSign}
               color="#F59E0B"
@@ -150,7 +150,7 @@ export default function Analytics() {
           <Text style={styles.sectionTitle}>Content Statistics</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{overviewData?.metrics?.pendingReviews || 0}</Text>
+              <Text style={styles.statValue}>{overviewData?.metrics.pendingReviews || 0}</Text>
               <Text style={styles.statLabel}>Pending Reviews</Text>
             </View>
             <View style={styles.statItem}>
