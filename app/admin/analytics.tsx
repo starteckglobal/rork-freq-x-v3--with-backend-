@@ -292,6 +292,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    justifyContent: 'space-between',
   },
   metricCard: {
     backgroundColor: '#1F2937',
@@ -300,6 +301,7 @@ const styles = StyleSheet.create({
     width: (width - 60) / 2,
     borderWidth: 1,
     borderColor: '#374151',
+    alignItems: 'center',
   },
   metricHeader: {
     flexDirection: 'row',
@@ -339,6 +341,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: '#374151',
+    alignItems: 'center',
   },
   chartTitle: {
     fontSize: 16,
@@ -355,6 +358,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#374151',
     borderStyle: 'dashed',
+    alignSelf: 'center',
+    width: '100%',
   },
   chartPlaceholderText: {
     fontSize: 16,
@@ -371,6 +376,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 16,
+    justifyContent: 'space-between',
   },
   statItem: {
     backgroundColor: '#1F2937',
@@ -380,6 +386,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#374151',
+    justifyContent: 'center',
   },
   statValue: {
     fontSize: 20,
@@ -418,6 +425,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
+    justifyContent: 'space-between',
   },
   healthItem: {
     backgroundColor: '#1F2937',
@@ -426,6 +434,8 @@ const styles = StyleSheet.create({
     width: (width - 60) / 2,
     borderWidth: 1,
     borderColor: '#374151',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   healthIndicator: {
     width: 8,

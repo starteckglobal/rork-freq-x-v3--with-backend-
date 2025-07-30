@@ -373,7 +373,7 @@ export default function AnalyticsScreen() {
                   height={220}
                   chartConfig={chartConfig}
                   bezier
-                  style={styles.chart}
+                  style={[styles.chart, { alignSelf: 'center' }]}
                   withInnerLines={false}
                   withOuterLines={false}
                   withVerticalLabels={true}
@@ -485,7 +485,7 @@ export default function AnalyticsScreen() {
                   height={220}
                   chartConfig={chartConfig}
                   bezier
-                  style={styles.chart}
+                  style={[styles.chart, { alignSelf: 'center' }]}
                   withInnerLines={false}
                   withOuterLines={false}
                   withVerticalLabels={true}
@@ -543,7 +543,7 @@ export default function AnalyticsScreen() {
                   yAxisSuffix=""
                   chartConfig={chartConfig}
                   verticalLabelRotation={30}
-                  style={styles.chart}
+                  style={[styles.chart, { alignSelf: 'center' }]}
                   withInnerLines={false}
                   withHorizontalLabels={false}
                   fromZero={true}
@@ -658,7 +658,7 @@ export default function AnalyticsScreen() {
                   height={220}
                   chartConfig={chartConfig}
                   bezier
-                  style={styles.chart}
+                  style={[styles.chart, { alignSelf: 'center' }]}
                   withInnerLines={false}
                   withOuterLines={false}
                   withVerticalLabels={true}
@@ -687,7 +687,7 @@ export default function AnalyticsScreen() {
                   yAxisLabel=""
                   yAxisSuffix=""
                   chartConfig={chartConfig}
-                  style={styles.chart}
+                  style={[styles.chart, { alignSelf: 'center' }]}
                   withInnerLines={false}
                   withHorizontalLabels={false}
                   fromZero={true}
@@ -889,6 +889,7 @@ const styles = StyleSheet.create({
   },
   pieChartContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
   },
   trackList: {
