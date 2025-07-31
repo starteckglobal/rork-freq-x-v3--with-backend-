@@ -7,13 +7,13 @@ import { Platform } from "react-native";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBFrgecZiCtz7XNbjyM-AeHrtJphib30Yw",
-  authDomain: "freqx-d11ef.firebaseapp.com",
-  projectId: "freqx-d11ef",
-  storageBucket: "freqx-d11ef.firebasestorage.app",
-  messagingSenderId: "987682339177",
-  appId: "1:987682339177:web:93e82c2bf84e724bdba5f8",
-  measurementId: "G-VX8ED7ZVZH"
+  apiKey: "AIzaSyBYhbuKyslMYe7tVe005ySYxUc2hKwI4r0",
+  authDomain: "freq-8a96f.firebaseapp.com",
+  projectId: "freq-8a96f",
+  storageBucket: "freq-8a96f.firebasestorage.app",
+  messagingSenderId: "58399058860",
+  appId: "1:58399058860:web:8bee89b78da5d599c76809",
+  measurementId: "G-9V5CEDKXF4"
 };
 
 // Initialize Firebase - check if app already exists to prevent duplicate initialization

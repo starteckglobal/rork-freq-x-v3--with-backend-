@@ -5,6 +5,7 @@ import { Track } from '@/types/audio';
 import { useUserStore } from './user-store';
 import { analyticsEventBus } from '@/services/analytics-event-bus';
 import { useNotificationsStore } from './notifications-store';
+import { firebaseStorage } from '@/services/firebase-storage';
 
 export type PlayerState = 'playing' | 'paused' | 'loading' | 'stopped';
 export type RepeatMode = 'off' | 'all' | 'one';
@@ -21,6 +22,7 @@ export interface PlayerStore {
   shuffleEnabled: boolean;
   isMinimized: boolean;
   waveformData: number[];
+  uploadedTracks: Track[];
   
   // Player controls
   playTrack: (track: Track) => void;
@@ -45,6 +47,12 @@ export interface PlayerStore {
   
   // Waveform controls
   generateWaveformData: () => void;
+  
+  // Music library management
+  addUploadedTrack: (track: Track) => void;
+  removeUploadedTrack: (trackId: string) => void;
+  getUploadedTracks: () => Track[];
+  refreshMusicLibrary: () => Promise<void>;
   
   // State updates (for internal use)
   setPlayerState: (state: PlayerState) => void;
@@ -117,6 +125,7 @@ export const usePlayerStore = create<PlayerStore>()(
       shuffleEnabled: false,
       isMinimized: true,
       waveformData: generateRealisticWaveformData(),
+      uploadedTracks: [],
       
       playTrack: (track: Track) => {
         const { currentTrack, history } = get();
@@ -677,6 +686,71 @@ export const usePlayerStore = create<PlayerStore>()(
       
       setDuration: (duration: number) => {
         set({ duration });
+      },
+      
+      // Music library management
+      addUploadedTrack: (track: Track) => {
+        const { uploadedTracks } = get();
+        const updatedTracks = [track, ...uploadedTracks];
+        set({ uploadedTracks: updatedTracks });
+        
+        try {
+          // Track upload completion
+          analyticsEventBus.publish('track_uploaded', {
+            track_id: track.id,
+            track_title: track.title,
+            track_artist: track.artist,
+            genre: track.genre,
+            duration: track.duration,
+          });
+        } catch (error) {
+          console.error('Error publishing analytics event:', error);
+        }
+      },
+      
+      removeUploadedTrack: (trackId: string) => {
+        const { uploadedTracks } = get();
+        const updatedTracks = uploadedTracks.filter(track => track.id !== trackId);
+        set({ uploadedTracks: updatedTracks });
+        
+        try {
+          // Track track deletion
+          analyticsEventBus.publish('custom_event', {
+            category: 'library',
+            action: 'track_deleted',
+            track_id: trackId,
+          });
+        } catch (error) {
+          console.error('Error publishing analytics event:', error);
+        }
+      },
+      
+      getUploadedTracks: () => {
+        return get().uploadedTracks;
+      },
+      
+      refreshMusicLibrary: async () => {
+        try {
+          const userState = useUserStore.getState();
+          if (!userState?.currentUser?.id) return;
+          
+          // In a real app, this would fetch from Firebase Firestore
+          // For now, we'll just keep the existing uploaded tracks
+          const { uploadedTracks } = get();
+          
+          try {
+            // Track library refresh
+            analyticsEventBus.publish('custom_event', {
+              category: 'library',
+              action: 'refresh',
+              tracks_count: uploadedTracks.length,
+            });
+          } catch (error) {
+            console.error('Error publishing analytics event:', error);
+          }
+        } catch (error) {
+          console.error('Error refreshing music library:', error);
+        }
       }
     }),
     {
@@ -686,6 +760,7 @@ export const usePlayerStore = create<PlayerStore>()(
         volume: state.volume,
         repeatMode: state.repeatMode,
         shuffleEnabled: state.shuffleEnabled,
+        uploadedTracks: state.uploadedTracks,
       }),
     }
   )

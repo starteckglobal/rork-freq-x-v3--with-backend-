@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, FlatList, Alert, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Music, ListMusic, FolderPlus, Clock } from 'lucide-react-native';
+import { Plus, Music, ListMusic, FolderPlus, Clock, Upload } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { useUserStore } from '@/store/user-store';
 import TrackList from '@/components/TrackList';
 import PlaylistCard from '@/components/PlaylistCard';
+import UploadTrackModal from '@/components/UploadTrackModal';
 import { tracks } from '@/mocks/tracks';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlaylistCreationModal from '@/components/PlaylistCreationModal';
@@ -26,9 +27,10 @@ export default function LibraryScreen() {
     setShowLoginModal,
     userPlaylists // Use the actual user store playlists
   } = useUserStore();
-  const { currentTrack, isMinimized } = usePlayerStore();
+  const { currentTrack, isMinimized, uploadedTracks } = usePlayerStore();
   const [activeTab, setActiveTab] = useState('playlists');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const analytics = useAnalytics();
   const insets = useSafeAreaInsets();
   
@@ -39,6 +41,9 @@ export default function LibraryScreen() {
   const recentlyPlayedList = tracks.filter(track => 
     recentlyPlayed?.includes(track.id) || false
   );
+  
+  // Get uploaded tracks
+  const uploadedTracksList = uploadedTracks || [];
   
   // Track screen view
   useEffect(() => {
@@ -56,6 +61,22 @@ export default function LibraryScreen() {
     
     analytics.trackFeatureUse('create_playlist', { source: 'library_screen' });
     setShowCreateModal(true);
+  };
+  
+  const handleUploadTrack = () => {
+    if (!isLoggedIn) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    analytics.trackFeatureUse('upload_track', { source: 'library_screen' });
+    setShowUploadModal(true);
+  };
+  
+  const handleTrackUploaded = (trackId: string) => {
+    console.log('Track uploaded with ID:', trackId);
+    // The track is already added to the store, just switch to uploads tab
+    setActiveTab('uploads');
   };
   
   const handlePlaylistCreated = (playlistId: string) => {
@@ -160,6 +181,14 @@ export default function LibraryScreen() {
         <View style={styles.headerButtons}>
           <TouchableOpacity 
             style={styles.iconButton}
+            onPress={handleUploadTrack}
+            accessibilityLabel="Upload track"
+            accessibilityHint="Upload a music track"
+          >
+            <Upload size={24} color={colors.text} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.iconButton}
             onPress={handleCreatePlaylist}
             accessibilityLabel="Create playlist"
             accessibilityHint="Creates a new playlist"
@@ -192,6 +221,18 @@ export default function LibraryScreen() {
             <Music size={20} color={activeTab === 'tracks' ? colors.primary : colors.textSecondary} />
             <Text style={[styles.tabText, activeTab === 'tracks' && styles.activeTabText]}>
               Liked Tracks
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'uploads' && styles.activeTab]}
+            onPress={() => handleTabChange('uploads')}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: activeTab === 'uploads' }}
+          >
+            <Upload size={20} color={activeTab === 'uploads' ? colors.primary : colors.textSecondary} />
+            <Text style={[styles.tabText, activeTab === 'uploads' && styles.activeTabText]}>
+              Uploads
             </Text>
           </TouchableOpacity>
           
@@ -268,6 +309,62 @@ export default function LibraryScreen() {
                 </TouchableOpacity>
                 
                 {renderPlaylistsGrid()}
+              </View>
+            )}
+          </View>
+        ) : activeTab === 'uploads' ? (
+          <View style={styles.contentSection}>
+            {!isLoggedIn ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateTitle}>Upload your music</Text>
+                <Text style={styles.emptyStateText}>
+                  Log in to upload and share your own music tracks
+                </Text>
+                <TouchableOpacity 
+                  style={styles.loginButton}
+                  onPress={() => {
+                    analyticsEventBus.publish('custom_event', {
+                      category: 'user_action',
+                      action: 'login_prompt_click',
+                      source: 'library_uploads'
+                    });
+                    setShowLoginModal(true);
+                  }}
+                >
+                  <Text style={styles.loginButtonText}>Login</Text>
+                </TouchableOpacity>
+              </View>
+            ) : uploadedTracksList.length === 0 ? (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateTitle}>No uploaded tracks yet</Text>
+                <Text style={styles.emptyStateText}>
+                  Upload your first track to share your music with the world
+                </Text>
+                <TouchableOpacity 
+                  style={styles.createButton}
+                  onPress={handleUploadTrack}
+                >
+                  <Upload size={20} color={colors.text} />
+                  <Text style={styles.createButtonText}>Upload Track</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View>
+                <View style={styles.uploadHeaderContainer}>
+                  <Text style={styles.sectionTitle}>Your Uploads ({uploadedTracksList.length})</Text>
+                  <TouchableOpacity 
+                    style={styles.uploadButton}
+                    onPress={handleUploadTrack}
+                  >
+                    <Upload size={16} color={colors.primary} />
+                    <Text style={styles.uploadButtonText}>Upload</Text>
+                  </TouchableOpacity>
+                </View>
+                <TrackList 
+                  title=""
+                  tracks={uploadedTracksList}
+                  showHeader={false}
+                />
               </View>
             )}
           </View>
@@ -352,6 +449,12 @@ export default function LibraryScreen() {
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={handlePlaylistCreated}
+      />
+      
+      <UploadTrackModal
+        visible={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onSuccess={handleTrackUploaded}
       />
     </SafeAreaView>
   );
@@ -501,5 +604,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-
+  uploadHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  uploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  uploadButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -14,9 +14,11 @@ import {
   ActivityIndicator,
   Alert,
   Switch,
-  ScrollView
+  ScrollView,
+  ProgressBarAndroid,
+  ProgressViewIOS
 } from 'react-native';
-import { X, Upload, Image as ImageIcon, Music, Calendar, Tag, Clock } from 'lucide-react-native';
+import { X, Upload, Image as ImageIcon, Music, Calendar, Tag, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { defaultCoverArt } from '@/constants/images';
 import StyledInput from '@/components/StyledInput';
@@ -25,7 +27,11 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useUserStore } from '@/store/user-store';
+import { usePlayerStore } from '@/store/player-store';
 import { analytics } from '@/services/analytics';
+import { firebaseStorage, UploadProgress } from '@/services/firebase-storage';
+import { Track } from '@/types/audio';
+import { generateId } from '@/utils/id';
 
 interface UploadTrackModalProps {
   visible: boolean;
@@ -62,8 +68,14 @@ export default function UploadTrackModal({
   const [errors, setErrors] = useState<FormErrors>({});
   const [formTouched, setFormTouched] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  const [uploadState, setUploadState] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [canCancel, setCanCancel] = useState(false);
   
   const { currentUser } = useUserStore();
+  const { addUploadedTrack, refreshMusicLibrary } = usePlayerStore();
+  const uploadTaskRef = useRef<any>(null);
   
   // Reset form when modal is opened/closed
   useEffect(() => {
@@ -90,6 +102,11 @@ export default function UploadTrackModal({
     setErrors({});
     setFormTouched(false);
     setDuration(0);
+    setUploadProgress(null);
+    setUploadState('idle');
+    setUploadError(null);
+    setCanCancel(false);
+    uploadTaskRef.current = null;
   };
   
   const handlePickImage = async () => {
@@ -132,8 +149,16 @@ export default function UploadTrackModal({
       });
       
       if (!result.canceled) {
-        setAudioFile(result.assets[0]);
-        // Fixed: Use proper type for errors
+        const selectedFile = result.assets[0];
+        
+        // Validate file before setting
+        const validation = firebaseStorage.validateMusicFile(selectedFile);
+        if (!validation.isValid) {
+          Alert.alert('Invalid File', validation.error || 'Please select a valid audio file');
+          return;
+        }
+        
+        setAudioFile(selectedFile);
         setErrors(prev => {
           const newErrors = { ...prev };
           delete newErrors.audioFile;
@@ -141,10 +166,18 @@ export default function UploadTrackModal({
         });
         setFormTouched(true);
         
-        // In a real app, you would get the duration from the audio file
-        // For now, we'll just set a random duration between 2 and 5 minutes
-        const randomDuration = Math.floor(Math.random() * (300 - 120 + 1)) + 120;
-        setDuration(randomDuration);
+        // Estimate duration based on file size (rough approximation)
+        // In a real app, you would extract actual duration from audio metadata
+        const fileSizeInMB = (selectedFile.size || 0) / (1024 * 1024);
+        const estimatedDuration = Math.max(120, Math.min(600, Math.floor(fileSizeInMB * 60))); // 2-10 minutes
+        setDuration(estimatedDuration);
+        
+        console.log('Selected audio file:', {
+          name: selectedFile.name,
+          size: selectedFile.size,
+          type: selectedFile.mimeType,
+          estimatedDuration
+        });
       }
     } catch (error) {
       console.error('Error picking audio file:', error);
@@ -183,49 +216,202 @@ export default function UploadTrackModal({
   const handleUpload = async () => {
     if (!validateForm()) return;
     
+    if (!currentUser?.id) {
+      Alert.alert('Error', 'You must be logged in to upload tracks');
+      return;
+    }
+    
     setIsLoading(true);
+    setUploadState('uploading');
+    setUploadError(null);
+    setCanCancel(true);
     
     try {
-      // In a real app, this would upload the files to a server
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Starting upload process...');
       
-      // Generate a mock track ID
-      const trackId = `track-${Date.now()}`;
+      // Upload cover image first if provided
+      let coverImageUrl = defaultCoverArt;
+      if (coverImage) {
+        console.log('Uploading cover image...');
+        const coverImageResult = await firebaseStorage.upload(
+          `covers/${currentUser.id}/${Date.now()}.jpg`,
+          await (await fetch(coverImage)).blob()
+        );
+        
+        if (coverImageResult.error) {
+          throw new Error(`Cover image upload failed: ${coverImageResult.error}`);
+        }
+        
+        coverImageUrl = coverImageResult.url || defaultCoverArt;
+        console.log('Cover image uploaded:', coverImageUrl);
+      }
+      
+      // Upload audio file with progress tracking
+      console.log('Uploading audio file...');
+      const uploadResult = await firebaseStorage.uploadMusic(
+        audioFile,
+        {
+          title,
+          artist,
+          genre,
+          userId: currentUser.id
+        },
+        {
+          onProgress: (progress: UploadProgress) => {
+            console.log('Upload progress:', progress.progress.toFixed(1) + '%');
+            setUploadProgress(progress);
+          },
+          onStateChange: (state: string) => {
+            console.log('Upload state changed:', state);
+            if (state === 'success') {
+              setCanCancel(false);
+            }
+          }
+        }
+      );
+      
+      if (uploadResult.error) {
+        throw new Error(uploadResult.error);
+      }
+      
+      if (!uploadResult.url) {
+        throw new Error('Upload completed but no URL received');
+      }
+      
+      console.log('Audio file uploaded successfully:', uploadResult.url);
+      
+      // Create track object
+      const trackId = generateId();
+      const newTrack: Track = {
+        id: trackId,
+        title,
+        artist,
+        artistId: currentUser.id,
+        coverArt: coverImageUrl,
+        audioUrl: uploadResult.url,
+        duration,
+        plays: 0,
+        likes: 0,
+        genre: genre || 'Unknown',
+        releaseDate: releaseDate.toISOString().split('T')[0],
+        description: `Uploaded by ${artist}`,
+        waveformData: Array.from({ length: 100 }, () => Math.random()),
+        isExplicit: false,
+        isPrivate
+      };
+      
+      // Add to uploaded tracks
+      addUploadedTrack(newTrack);
+      
+      // Refresh music library
+      await refreshMusicLibrary();
       
       // Track analytics event
       analytics.track('track_uploaded', {
-        user_id: currentUser?.id || 'anonymous',
+        user_id: currentUser.id,
+        track_id: trackId,
         track_title: title,
+        track_artist: artist,
         genre: genre,
+        duration: duration,
         is_private: isPrivate,
         has_cover_image: !!coverImage,
+        file_size: audioFile?.size || 0,
         added_to_playlist: !!initialPlaylistId,
       });
       
+      setUploadState('success');
       setIsLoading(false);
+      setCanCancel(false);
+      
+      console.log('Upload completed successfully!');
       
       // Show success message
       Alert.alert(
-        "Success",
-        "Your track has been uploaded successfully!",
-        [{ text: "OK", onPress: () => {
-          resetForm();
-          if (onSuccess) {
-            onSuccess(trackId);
+        "Upload Successful!",
+        `"${title}" has been uploaded and is now available in your music library. You can play it immediately!`,
+        [{ 
+          text: "Play Now", 
+          onPress: () => {
+            const { playTrack } = usePlayerStore.getState();
+            playTrack(newTrack);
+            resetForm();
+            if (onSuccess) {
+              onSuccess(trackId);
+            }
+            onClose();
           }
-          onClose();
-        }}]
+        }, {
+          text: "OK", 
+          onPress: () => {
+            resetForm();
+            if (onSuccess) {
+              onSuccess(trackId);
+            }
+            onClose();
+          }
+        }]
       );
-    } catch (error) {
-      console.error('Error uploading track:', error);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      setUploadState('error');
+      setUploadError(error.message || 'Upload failed');
       setIsLoading(false);
-      Alert.alert('Error', 'Failed to upload track. Please try again.');
+      setCanCancel(false);
+      
+      Alert.alert(
+        'Upload Failed', 
+        error.message || 'Failed to upload track. Please check your internet connection and try again.',
+        [
+          { text: 'Retry', onPress: handleUpload },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+    }
+  };
+  
+  const handleCancelUpload = () => {
+    if (uploadTaskRef.current && canCancel) {
+      Alert.alert(
+        'Cancel Upload',
+        'Are you sure you want to cancel the upload?',
+        [
+          { text: 'Continue Upload', style: 'cancel' },
+          { 
+            text: 'Cancel Upload', 
+            style: 'destructive',
+            onPress: () => {
+              if (uploadTaskRef.current) {
+                firebaseStorage.cancelUpload(uploadTaskRef.current);
+              }
+              setUploadState('idle');
+              setUploadProgress(null);
+              setIsLoading(false);
+              setCanCancel(false);
+            }
+          }
+        ]
+      );
     }
   };
   
   const confirmClose = () => {
-    if (formTouched) {
+    if (uploadState === 'uploading') {
+      Alert.alert(
+        "Upload in Progress",
+        "Your track is currently uploading. Are you sure you want to cancel?",
+        [
+          { text: "Continue Upload", style: "cancel" },
+          { text: "Cancel Upload", style: "destructive", onPress: () => {
+            if (uploadTaskRef.current && canCancel) {
+              firebaseStorage.cancelUpload(uploadTaskRef.current);
+            }
+            resetForm();
+            onClose();
+          }}
+        ]
+      );
+    } else if (formTouched) {
       Alert.alert(
         "Discard Changes",
         "You have unsaved changes. Are you sure you want to close?",
@@ -254,6 +440,80 @@ export default function UploadTrackModal({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+  
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+  
+  const renderUploadProgress = () => {
+    if (!uploadProgress || uploadState !== 'uploading') return null;
+    
+    return (
+      <View style={styles.uploadProgressContainer}>
+        <View style={styles.uploadProgressHeader}>
+          <Text style={styles.uploadProgressTitle}>Uploading...</Text>
+          <Text style={styles.uploadProgressPercent}>
+            {uploadProgress.progress.toFixed(1)}%
+          </Text>
+        </View>
+        
+        {Platform.OS === 'ios' ? (
+          <ProgressViewIOS 
+            progress={uploadProgress.progress / 100} 
+            progressTintColor={colors.primary}
+            trackTintColor={colors.border}
+            style={styles.progressBar}
+          />
+        ) : (
+          <ProgressBarAndroid 
+            styleAttr="Horizontal" 
+            progress={uploadProgress.progress / 100}
+            color={colors.primary}
+            style={styles.progressBar}
+          />
+        )}
+        
+        <View style={styles.uploadProgressDetails}>
+          <Text style={styles.uploadProgressText}>
+            {formatFileSize(uploadProgress.bytesTransferred)} / {formatFileSize(uploadProgress.totalBytes)}
+          </Text>
+          {canCancel && (
+            <TouchableOpacity onPress={handleCancelUpload} style={styles.cancelButton}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+  
+  const renderUploadStatus = () => {
+    if (uploadState === 'success') {
+      return (
+        <View style={styles.uploadStatusContainer}>
+          <CheckCircle size={24} color={colors.success || '#4CAF50'} />
+          <Text style={styles.uploadStatusText}>Upload completed successfully!</Text>
+        </View>
+      );
+    }
+    
+    if (uploadState === 'error' && uploadError) {
+      return (
+        <View style={styles.uploadStatusContainer}>
+          <AlertCircle size={24} color={colors.error} />
+          <Text style={[styles.uploadStatusText, { color: colors.error }]}>
+            {uploadError}
+          </Text>
+        </View>
+      );
+    }
+    
+    return null;
   };
   
   return (
@@ -304,20 +564,34 @@ export default function UploadTrackModal({
                   <TouchableOpacity 
                     style={[styles.audioFileContainer, audioFile ? styles.audioFileSelected : null]}
                     onPress={handlePickAudio}
-                    disabled={isLoading}
+                    disabled={isLoading || uploadState === 'uploading'}
                   >
                     <Music size={24} color={colors.text} />
-                    <Text style={styles.audioFileText}>
-                      {audioFile ? audioFile.name : 'Select Audio File'}
-                    </Text>
-                    {audioFile && duration > 0 && (
-                      <View style={styles.durationContainer}>
-                        <Clock size={14} color={colors.textSecondary} />
-                        <Text style={styles.durationText}>{formatDuration(duration)}</Text>
-                      </View>
-                    )}
+                    <View style={styles.audioFileInfo}>
+                      <Text style={styles.audioFileText}>
+                        {audioFile ? audioFile.name : 'Select Audio File (MP3, WAV, MP4, M4A)'}
+                      </Text>
+                      {audioFile && (
+                        <View style={styles.audioFileDetails}>
+                          {duration > 0 && (
+                            <View style={styles.durationContainer}>
+                              <Clock size={14} color={colors.textSecondary} />
+                              <Text style={styles.durationText}>{formatDuration(duration)}</Text>
+                            </View>
+                          )}
+                          {audioFile.size && (
+                            <Text style={styles.fileSizeText}>
+                              {formatFileSize(audioFile.size)}
+                            </Text>
+                          )}
+                        </View>
+                      )}
+                    </View>
                   </TouchableOpacity>
                   {errors.audioFile && <Text style={styles.errorText}>{errors.audioFile}</Text>}
+                  
+                  {renderUploadProgress()}
+                  {renderUploadStatus()}
                   
                   <View style={styles.inputContainer}>
                     <Text style={styles.inputLabel}>Title</Text>
@@ -434,10 +708,33 @@ export default function UploadTrackModal({
                   
                   <View style={styles.uploadButtonContainer}>
                     <StyledButton
-                      title={isLoading ? "Uploading..." : "Upload Track"}
+                      title={
+                        uploadState === 'uploading' ? 'Uploading...' :
+                        uploadState === 'success' ? 'Upload Complete!' :
+                        isLoading ? 'Processing...' : 'Upload Track'
+                      }
                       onPress={handleUpload}
-                      disabled={isLoading || !formTouched}
+                      disabled={
+                        isLoading || 
+                        uploadState === 'uploading' || 
+                        uploadState === 'success' || 
+                        !formTouched || 
+                        !audioFile
+                      }
+                      style={[
+                        uploadState === 'success' && styles.successButton,
+                        uploadState === 'error' && styles.errorButton
+                      ]}
                     />
+                    {uploadState === 'uploading' && canCancel && (
+                      <TouchableOpacity 
+                        style={styles.cancelUploadButton}
+                        onPress={handleCancelUpload}
+                      >
+                        <XCircle size={20} color={colors.error} />
+                        <Text style={styles.cancelUploadText}>Cancel Upload</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
                 </View>
               </ScrollView>
@@ -646,5 +943,106 @@ const styles = StyleSheet.create({
   uploadButtonContainer: {
     alignItems: 'center',
     marginTop: 8,
+  },
+  audioFileInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  audioFileDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 12,
+  },
+  fileSizeText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  uploadProgressContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  uploadProgressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  uploadProgressTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  uploadProgressPercent: {
+    color: colors.primary,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+    marginVertical: 8,
+  },
+  uploadProgressDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  uploadProgressText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  cancelButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  cancelButtonText: {
+    color: colors.error,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  uploadStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    gap: 8,
+  },
+  uploadStatusText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  successButton: {
+    backgroundColor: colors.success || '#4CAF50',
+  },
+  errorButton: {
+    backgroundColor: colors.error,
+  },
+  cancelUploadButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.error,
+    gap: 8,
+  },
+  cancelUploadText: {
+    color: colors.error,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
