@@ -1863,7 +1863,11 @@ Submission Process: ${opportunity.submissionProcess}`,
               Select tracks to submit for {opportunitiesData.find(o => o.id === selectedOpportunity)?.title}
             </Text>
             
-            <View style={styles.submissionTracksList}>
+            <ScrollView 
+              style={styles.submissionTracksList}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled={true}
+            >
               {catalogData.map((track) => (
                 <TouchableOpacity 
                   key={track.id}
@@ -1888,38 +1892,40 @@ Submission Process: ${opportunity.submissionProcess}`,
                   </View>
                 </TouchableOpacity>
               ))}
-            </View>
+            </ScrollView>
             
-            <View style={styles.submissionNoteContainer}>
-              <Text style={styles.submissionNoteLabel}>Add a note (optional):</Text>
-              <TextInput
-                style={styles.submissionNoteInput}
-                placeholder="Tell us why your tracks are perfect for this opportunity..."
-                placeholderTextColor={colors.textTertiary}
-                multiline
-                numberOfLines={4}
-                value={submissionNote}
-                onChangeText={setSubmissionNote}
-              />
+            <View style={styles.submissionFormFooter}>
+              <View style={styles.submissionNoteContainer}>
+                <Text style={styles.submissionNoteLabel}>Add a note</Text>
+                <TextInput
+                  style={styles.submissionNoteInput}
+                  placeholder="Tell us why your tracks are perfect for this opportunity..."
+                  placeholderTextColor={colors.textTertiary}
+                  multiline
+                  numberOfLines={3}
+                  value={submissionNote}
+                  onChangeText={setSubmissionNote}
+                />
+              </View>
+              
+              <TouchableOpacity 
+                style={[
+                  styles.submitTracksButton,
+                  (!selectedSubmissionTracks || selectedSubmissionTracks.length === 0) && styles.submitTracksButtonDisabled
+                ]}
+                onPress={handleSubmitTracks}
+                disabled={!selectedSubmissionTracks || selectedSubmissionTracks.length === 0 || loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                  <>
+                    <Send size={20} color="#FFF" />
+                    <Text style={styles.submitTracksButtonText}>Submit Tracks</Text>
+                  </>
+                )}
+              </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
-              style={[
-                styles.submitTracksButton,
-                (!selectedSubmissionTracks || selectedSubmissionTracks.length === 0) && styles.submitTracksButtonDisabled
-              ]}
-              onPress={handleSubmitTracks}
-              disabled={!selectedSubmissionTracks || selectedSubmissionTracks.length === 0 || loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <>
-                  <Send size={20} color="#FFF" />
-                  <Text style={styles.submitTracksButtonText}>Submit Tracks</Text>
-                </>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
       )}
@@ -3656,8 +3662,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   submissionTracksList: {
-    maxHeight: 180,
-    marginBottom: 12,
+    maxHeight: 200,
+    marginBottom: 16,
   },
   submissionTrackItem: {
     flexDirection: 'row',
@@ -3689,32 +3695,40 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 12,
   },
+  submissionFormFooter: {
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
   submissionNoteContainer: {
-    marginTop: 12,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   submissionNoteLabel: {
     color: colors.text,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   submissionNoteInput: {
     backgroundColor: colors.card,
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     color: colors.text,
-    height: 60,
+    fontSize: 14,
+    height: 80,
     textAlignVertical: 'top',
+    borderWidth: 1,
+    borderColor: colors.cardElevated,
   },
   submitTracksButton: {
     flexDirection: 'row',
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 4,
   },
   submitTracksButtonDisabled: {
     opacity: 0.7,
@@ -3722,7 +3736,7 @@ const styles = StyleSheet.create({
   submitTracksButtonText: {
     color: '#FFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginLeft: 8,
   },
 });
