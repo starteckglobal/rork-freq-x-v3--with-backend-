@@ -8,6 +8,10 @@ export { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 // Re-export Firebase app and services
 export { auth, db, storage, analytics, initializeAnonymousAuth } from '@/lib/firebase';
 
+// Import Firebase services for internal use
+import { auth, initializeAnonymousAuth } from '@/lib/firebase';
+import { firebaseAuth } from '@/services/firebase-auth';
+
 // Common Firebase types
 export type { User } from 'firebase/auth';
 export type { DocumentData, QueryConstraint } from 'firebase/firestore';
