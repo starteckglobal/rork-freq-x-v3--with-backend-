@@ -487,7 +487,7 @@ export default function UploadTrackModal({
     if (uploadState === 'success') {
       return (
         <View style={styles.uploadStatusContainer}>
-          <CheckCircle size={24} color={colors.success || '#4CAF50'} />
+          <CheckCircle size={24} color={colors.success} />
           <Text style={styles.uploadStatusText}>Upload completed successfully!</Text>
         </View>
       );
@@ -1023,7 +1023,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   successButton: {
-    backgroundColor: colors.success || '#4CAF50',
+    backgroundColor: colors.success,
   },
   errorButton: {
     backgroundColor: colors.error,
