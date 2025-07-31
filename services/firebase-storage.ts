@@ -7,8 +7,9 @@ import {
   listAll,
   UploadTask
 } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { storage, auth } from '@/lib/firebase';
 import { Platform } from 'react-native';
+import { signInAnonymously } from 'firebase/auth';
 
 export interface UploadProgress {
   bytesTransferred: number;
@@ -35,10 +36,31 @@ export interface MusicUploadOptions {
   };
 }
 
+// Ensure user is authenticated before upload
+const ensureAuthenticated = async (): Promise<boolean> => {
+  try {
+    if (!auth.currentUser) {
+      console.log('No authenticated user, signing in anonymously...');
+      await signInAnonymously(auth);
+      console.log('Anonymous authentication successful');
+    }
+    return true;
+  } catch (error: any) {
+    console.error('Authentication failed:', error);
+    return false;
+  }
+};
+
 export const firebaseStorage = {
   // Upload a file
   upload: async (path: string, file: Blob | Uint8Array | ArrayBuffer): Promise<UploadResult> => {
     try {
+      // Ensure user is authenticated
+      const isAuthenticated = await ensureAuthenticated();
+      if (!isAuthenticated) {
+        return { url: null, error: 'Authentication failed' };
+      }
+
       const storageRef = ref(storage, path);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
@@ -46,78 +68,115 @@ export const firebaseStorage = {
       return { url: downloadURL, error: null, metadata: snapshot.metadata };
     } catch (error: any) {
       console.error('Firebase upload error:', error);
-      return { url: null, error: error.message };
+      let errorMessage = 'Upload failed';
+      
+      switch (error.code) {
+        case 'storage/unauthorized':
+          errorMessage = 'Upload permission denied. Please check your authentication.';
+          break;
+        case 'storage/canceled':
+          errorMessage = 'Upload was canceled';
+          break;
+        case 'storage/quota-exceeded':
+          errorMessage = 'Storage quota exceeded';
+          break;
+        case 'storage/invalid-format':
+          errorMessage = 'Invalid file format';
+          break;
+        case 'storage/retry-limit-exceeded':
+          errorMessage = 'Upload timeout - please try again';
+          break;
+        default:
+          errorMessage = error.message || 'Upload failed';
+      }
+      
+      return { url: null, error: errorMessage };
     }
   },
 
   // Upload with progress tracking
-  uploadWithProgress: (
+  uploadWithProgress: async (
     path: string, 
     file: Blob | Uint8Array | ArrayBuffer,
     options?: MusicUploadOptions
   ): Promise<UploadResult> => {
-    const storageRef = ref(storage, path);
-    const uploadTask = uploadBytesResumable(storageRef, file, {
-      customMetadata: options?.metadata || {}
-    });
+    try {
+      // Ensure user is authenticated
+      const isAuthenticated = await ensureAuthenticated();
+      if (!isAuthenticated) {
+        return { url: null, error: 'Authentication failed' };
+      }
 
-    return new Promise((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          const progressInfo: UploadProgress = {
-            bytesTransferred: snapshot.bytesTransferred,
-            totalBytes: snapshot.totalBytes,
-            progress,
-            state: snapshot.state as any
-          };
-          
-          if (options?.onProgress) {
-            options.onProgress(progressInfo);
+      const storageRef = ref(storage, path);
+      const uploadTask = uploadBytesResumable(storageRef, file, {
+        customMetadata: options?.metadata || {}
+      });
+
+      return new Promise((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            const progressInfo: UploadProgress = {
+              bytesTransferred: snapshot.bytesTransferred,
+              totalBytes: snapshot.totalBytes,
+              progress,
+              state: snapshot.state as any
+            };
+            
+            if (options?.onProgress) {
+              options.onProgress(progressInfo);
+            }
+            
+            if (options?.onStateChange) {
+              options.onStateChange(snapshot.state);
+            }
+          },
+          (error) => {
+            console.error('Upload error:', error);
+            let errorMessage = 'Upload failed';
+            
+            switch (error.code) {
+              case 'storage/unauthorized':
+                errorMessage = 'Upload permission denied. Please check your authentication.';
+                break;
+              case 'storage/canceled':
+                errorMessage = 'Upload was canceled';
+                break;
+              case 'storage/quota-exceeded':
+                errorMessage = 'Storage quota exceeded';
+                break;
+              case 'storage/invalid-format':
+                errorMessage = 'Invalid file format';
+                break;
+              case 'storage/retry-limit-exceeded':
+                errorMessage = 'Upload timeout - please try again';
+                break;
+              default:
+                errorMessage = error.message || 'Upload failed';
+            }
+            
+            reject({ url: null, error: errorMessage });
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              if (!downloadURL) {
+                reject({ url: null, error: 'Upload completed but no URL received' });
+                return;
+              }
+              resolve({ url: downloadURL, error: null, metadata: uploadTask.snapshot.metadata });
+            } catch (error: any) {
+              console.error('Error getting download URL:', error);
+              reject({ url: null, error: 'Failed to get download URL: ' + error.message });
+            }
           }
-          
-          if (options?.onStateChange) {
-            options.onStateChange(snapshot.state);
-          }
-        },
-        (error) => {
-          console.error('Upload error:', error);
-          let errorMessage = 'Upload failed';
-          
-          switch (error.code) {
-            case 'storage/unauthorized':
-              errorMessage = 'You do not have permission to upload files';
-              break;
-            case 'storage/canceled':
-              errorMessage = 'Upload was canceled';
-              break;
-            case 'storage/quota-exceeded':
-              errorMessage = 'Storage quota exceeded';
-              break;
-            case 'storage/invalid-format':
-              errorMessage = 'Invalid file format';
-              break;
-            case 'storage/retry-limit-exceeded':
-              errorMessage = 'Upload timeout - please try again';
-              break;
-            default:
-              errorMessage = error.message || 'Upload failed';
-          }
-          
-          reject({ url: null, error: errorMessage });
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve({ url: downloadURL, error: null, metadata: uploadTask.snapshot.metadata });
-          } catch (error: any) {
-            console.error('Error getting download URL:', error);
-            reject({ url: null, error: error.message });
-          }
-        }
-      );
-    });
+        );
+      });
+    } catch (error: any) {
+      console.error('Upload initialization error:', error);
+      return { url: null, error: error.message };
+    }
   },
 
   // Cancel upload
@@ -241,6 +300,12 @@ export const firebaseStorage = {
   // Get download URL
   getDownloadURL: async (path: string) => {
     try {
+      // Ensure user is authenticated
+      const isAuthenticated = await ensureAuthenticated();
+      if (!isAuthenticated) {
+        return { url: null, error: 'Authentication failed' };
+      }
+
       const storageRef = ref(storage, path);
       const url = await getDownloadURL(storageRef);
       return { url, error: null };
@@ -252,6 +317,12 @@ export const firebaseStorage = {
   // Delete a file
   delete: async (path: string) => {
     try {
+      // Ensure user is authenticated
+      const isAuthenticated = await ensureAuthenticated();
+      if (!isAuthenticated) {
+        return { error: 'Authentication failed' };
+      }
+
       const storageRef = ref(storage, path);
       await deleteObject(storageRef);
       return { error: null };
@@ -263,6 +334,12 @@ export const firebaseStorage = {
   // List all files in a directory
   listFiles: async (path: string) => {
     try {
+      // Ensure user is authenticated
+      const isAuthenticated = await ensureAuthenticated();
+      if (!isAuthenticated) {
+        return { files: [], error: 'Authentication failed' };
+      }
+
       const storageRef = ref(storage, path);
       const result = await listAll(storageRef);
       

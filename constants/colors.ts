@@ -73,7 +73,11 @@ export const lightColors = {
 };
 
 // Default to dark theme for backward compatibility
-export const colors = darkColors;
+export const colors = {
+  light: lightColors,
+  dark: darkColors,
+  ...darkColors // For backward compatibility
+};
 
 export default colors;
 

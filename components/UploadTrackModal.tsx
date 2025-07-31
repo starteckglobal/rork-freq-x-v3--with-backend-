@@ -270,12 +270,16 @@ export default function UploadTrackModal({
       );
       
       if (uploadResult.error) {
+        console.error('Upload result error:', uploadResult.error);
         throw new Error(uploadResult.error);
       }
       
       if (!uploadResult.url) {
-        throw new Error('Upload completed but no URL received');
+        console.error('Upload completed but no URL received. Upload result:', uploadResult);
+        throw new Error('Upload completed but no URL received. This may be a Firebase configuration issue.');
       }
+      
+      console.log('Upload successful! URL:', uploadResult.url);
       
       console.log('Audio file uploaded successfully:', uploadResult.url);
       
@@ -357,14 +361,27 @@ export default function UploadTrackModal({
       setIsLoading(false);
       setCanCancel(false);
       
-      Alert.alert(
-        'Upload Failed', 
-        error.message || 'Failed to upload track. Please check your internet connection and try again.',
-        [
-          { text: 'Retry', onPress: handleUpload },
-          { text: 'Cancel', style: 'cancel' }
-        ]
-      );
+      let errorMessage = error.message || 'Failed to upload track. Please check your internet connection and try again.';
+      let showRetry = true;
+      
+      // Handle specific Firebase errors
+      if (error.message?.includes('permission') || error.message?.includes('unauthorized')) {
+        errorMessage = 'Upload permission denied. This may be due to Firebase configuration. Please check the Firebase setup documentation.';
+        showRetry = false;
+      } else if (error.message?.includes('Authentication failed')) {
+        errorMessage = 'Authentication failed. Please restart the app and try again.';
+      } else if (error.message?.includes('no URL received')) {
+        errorMessage = 'Upload completed but failed to get file URL. This may be a temporary issue.';
+      }
+      
+      const alertButtons = showRetry ? [
+        { text: 'Retry', onPress: handleUpload },
+        { text: 'Cancel', style: 'cancel' as const }
+      ] : [
+        { text: 'OK', style: 'cancel' as const }
+      ];
+      
+      Alert.alert('Upload Failed', errorMessage, alertButtons);
     }
   };
   

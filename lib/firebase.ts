@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
+import { getAuth, signInAnonymously } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { Platform } from "react-native";
@@ -26,5 +26,26 @@ export const storage = getStorage(app);
 
 // Initialize Analytics only on web platform
 export const analytics = Platform.OS === 'web' ? getAnalytics(app) : null;
+
+// Initialize anonymous authentication for storage access
+// Note: Firebase Storage rules must allow anonymous users to read/write
+// Rules should be set in Firebase Console:
+/*
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+*/
+if (!auth.currentUser) {
+  signInAnonymously(auth).then(() => {
+    console.log('Anonymous authentication initialized');
+  }).catch((error) => {
+    console.error('Failed to initialize anonymous authentication:', error);
+  });
+}
 
 export default app;
