@@ -7,9 +7,8 @@ import {
   listAll,
   UploadTask
 } from 'firebase/storage';
-import { storage, auth } from '@/lib/firebase';
+import { storage, auth, initializeAnonymousAuth } from '@/lib/firebase';
 import { Platform } from 'react-native';
-import { signInAnonymously } from 'firebase/auth';
 
 export interface UploadProgress {
   bytesTransferred: number;
@@ -40,13 +39,21 @@ export interface MusicUploadOptions {
 const ensureAuthenticated = async (): Promise<boolean> => {
   try {
     if (!auth.currentUser) {
-      console.log('No authenticated user, signing in anonymously...');
-      await signInAnonymously(auth);
+      console.log('No authenticated user, initializing anonymous authentication...');
+      await initializeAnonymousAuth();
       console.log('Anonymous authentication successful');
     }
     return true;
   } catch (error: any) {
     console.error('Authentication failed:', error);
+    
+    // Provide more specific error messages
+    if (error.code === 'auth/configuration-not-found') {
+      console.error('Firebase Auth is not properly configured. Please check Firebase Console.');
+    } else if (error.code === 'auth/operation-not-allowed') {
+      console.error('Anonymous authentication is disabled. Please enable it in Firebase Console.');
+    }
+    
     return false;
   }
 };

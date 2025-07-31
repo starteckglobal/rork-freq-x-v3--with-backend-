@@ -48,6 +48,13 @@ export const useFirebaseAuth = () => {
     return await firebaseAuth.updatePassword(newPassword);
   };
 
+  const initializeAnonymous = async () => {
+    setLoading(true);
+    const result = await firebaseAuth.initializeAnonymous();
+    setLoading(false);
+    return result;
+  };
+
   return {
     user,
     loading,
@@ -57,6 +64,7 @@ export const useFirebaseAuth = () => {
     resetPassword,
     updateUserProfile,
     updateUserPassword,
+    initializeAnonymous,
     isAuthenticated: !!user,
   };
 };

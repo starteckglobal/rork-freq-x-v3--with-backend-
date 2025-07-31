@@ -10,6 +10,7 @@ import { trpc } from '@/lib/trpc';
 import { httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
 import '@/lib/firebase';
+import { firebaseUtils } from '@/lib/firebase-utils';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -61,6 +62,25 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) {
       SplashScreen.hideAsync();
+      
+      // Initialize Firebase authentication in development
+      if (__DEV__) {
+        firebaseUtils.testConnection().then((result) => {
+          if (result.success) {
+            console.log('✅ Firebase initialized successfully:', result.message);
+          } else {
+            console.error('❌ Firebase initialization failed:', result.error);
+            if (result.suggestions) {
+              console.log('💡 Suggestions:');
+              result.suggestions.forEach((suggestion, index) => {
+                console.log(`   ${index + 1}. ${suggestion}`);
+              });
+            }
+          }
+        }).catch((error) => {
+          console.error('❌ Firebase test error:', error);
+        });
+      }
     }
   }, [loaded]);
 

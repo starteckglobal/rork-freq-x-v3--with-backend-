@@ -8,7 +8,7 @@ import {
   sendPasswordResetEmail,
   updatePassword
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, initializeAnonymousAuth } from '@/lib/firebase';
 
 export const firebaseAuth = {
   // Sign in with email and password
@@ -89,4 +89,14 @@ export const firebaseAuth = {
 
   // Get current user
   getCurrentUser: () => auth.currentUser,
+
+  // Initialize anonymous authentication
+  initializeAnonymous: async () => {
+    try {
+      const user = await initializeAnonymousAuth();
+      return { user, error: null };
+    } catch (error: any) {
+      return { user: null, error: error.message };
+    }
+  },
 };

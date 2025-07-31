@@ -1,8 +1,8 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, signInAnonymously } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, signInAnonymously, connectAuthEmulator } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 import { Platform } from "react-native";
 
 // Your web app's Firebase configuration
@@ -28,24 +28,28 @@ export const storage = getStorage(app);
 export const analytics = Platform.OS === 'web' ? getAnalytics(app) : null;
 
 // Initialize anonymous authentication for storage access
-// Note: Firebase Storage rules must allow anonymous users to read/write
-// Rules should be set in Firebase Console:
-/*
-rules_version = '2';
-service firebase.storage {
-  match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+// This function will be called when needed, not immediately
+export const initializeAnonymousAuth = async () => {
+  try {
+    if (!auth.currentUser) {
+      console.log('Initializing anonymous authentication...');
+      const userCredential = await signInAnonymously(auth);
+      console.log('Anonymous authentication successful:', userCredential.user.uid);
+      return userCredential.user;
     }
-  }
-}
-*/
-if (!auth.currentUser) {
-  signInAnonymously(auth).then(() => {
-    console.log('Anonymous authentication initialized');
-  }).catch((error) => {
+    return auth.currentUser;
+  } catch (error: any) {
     console.error('Failed to initialize anonymous authentication:', error);
-  });
-}
+    
+    // Handle specific Firebase Auth errors
+    if (error.code === 'auth/configuration-not-found') {
+      console.error('Firebase Auth configuration not found. Please check Firebase Console settings.');
+    } else if (error.code === 'auth/operation-not-allowed') {
+      console.error('Anonymous authentication is not enabled. Please enable it in Firebase Console.');
+    }
+    
+    throw error;
+  }
+};
 
 export default app;

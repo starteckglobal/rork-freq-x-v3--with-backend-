@@ -29,6 +29,7 @@ import { useUserStore } from '@/store/user-store';
 import { usePlayerStore } from '@/store/player-store';
 import { analytics } from '@/services/analytics';
 import { firebaseStorage, UploadProgress } from '@/services/firebase-storage';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { Track } from '@/types/audio';
 import { generateId } from '@/utils/id';
 
@@ -74,6 +75,7 @@ export default function UploadTrackModal({
   
   const { currentUser } = useUserStore();
   const { addUploadedTrack, refreshMusicLibrary } = usePlayerStore();
+  const { initializeAnonymous } = useFirebaseAuth();
   const uploadTaskRef = useRef<any>(null);
   
   // Reset form when modal is opened/closed
@@ -227,6 +229,15 @@ export default function UploadTrackModal({
     
     try {
       console.log('Starting upload process...');
+      
+      // Initialize Firebase authentication if needed
+      console.log('Initializing Firebase authentication...');
+      const authResult = await initializeAnonymous();
+      if (authResult.error) {
+        console.error('Firebase auth initialization failed:', authResult.error);
+        throw new Error(`Authentication failed: ${authResult.error}`);
+      }
+      console.log('Firebase authentication initialized successfully');
       
       // Upload cover image first if provided
       let coverImageUrl = defaultCoverArt;
