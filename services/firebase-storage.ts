@@ -145,7 +145,7 @@ export const firebaseStorage = {
       // Validate file
       const validation = firebaseStorage.validateMusicFile(file);
       if (!validation.isValid) {
-        return { url: null, error: validation.error };
+        return { url: null, error: validation.error || null };
       }
 
       // Generate unique path

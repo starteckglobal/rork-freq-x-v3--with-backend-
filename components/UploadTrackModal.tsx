@@ -15,11 +15,10 @@ import {
   Alert,
   Switch,
   ScrollView,
-  ProgressBarAndroid,
-  ProgressViewIOS
+  ProgressBarAndroid
 } from 'react-native';
 import { X, Upload, Image as ImageIcon, Music, Calendar, Tag, Clock, CheckCircle, AlertCircle, XCircle } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 import { defaultCoverArt } from '@/constants/images';
 import StyledInput from '@/components/StyledInput';
 import StyledButton from '@/components/StyledButton';
@@ -296,8 +295,7 @@ export default function UploadTrackModal({
         releaseDate: releaseDate.toISOString().split('T')[0],
         description: `Uploaded by ${artist}`,
         waveformData: Array.from({ length: 100 }, () => Math.random()),
-        isExplicit: false,
-        isPrivate
+        isExplicit: false
       };
       
       // Add to uploaded tracks
@@ -462,21 +460,14 @@ export default function UploadTrackModal({
           </Text>
         </View>
         
-        {Platform.OS === 'ios' ? (
-          <ProgressViewIOS 
-            progress={uploadProgress.progress / 100} 
-            progressTintColor={colors.primary}
-            trackTintColor={colors.border}
-            style={styles.progressBar}
+        <View style={[styles.progressBar, styles.progressBarContainer]}>
+          <View 
+            style={[
+              styles.progressBarFill, 
+              { width: `${uploadProgress.progress}%` }
+            ]} 
           />
-        ) : (
-          <ProgressBarAndroid 
-            styleAttr="Horizontal" 
-            progress={uploadProgress.progress / 100}
-            color={colors.primary}
-            style={styles.progressBar}
-          />
-        )}
+        </View>
         
         <View style={styles.uploadProgressDetails}>
           <Text style={styles.uploadProgressText}>
@@ -986,6 +977,14 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginVertical: 8,
+  },
+  progressBarContainer: {
+    backgroundColor: colors.border,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
   },
   uploadProgressDetails: {
     flexDirection: 'row',
