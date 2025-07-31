@@ -6,6 +6,7 @@ import { User } from '@/types/audio';
 import { colors } from '@/constants/colors';
 import { defaultAvatarUri } from '@/constants/images';
 import { useUserStore } from '@/store/user-store';
+import { formatFollowerCount } from '@/utils/formatNumber';
 
 interface UserCardProps {
   user: User;
@@ -66,7 +67,7 @@ export default function UserCard({ user, onPress }: UserCardProps) {
       <View style={styles.content}>
         <Text style={styles.displayName} numberOfLines={1}>{user.displayName}</Text>
         <Text style={styles.username} numberOfLines={1}>@{user.username}</Text>
-        <Text style={styles.stats}>{user.tracksCount || 0} tracks · {user.followers?.length || 0} followers</Text>
+        <Text style={styles.stats}>{user.tracksCount || 0} tracks · {formatFollowerCount(user.stats?.totalFollowers || user.followers?.length || 0)} followers</Text>
       </View>
       
       <TouchableOpacity 

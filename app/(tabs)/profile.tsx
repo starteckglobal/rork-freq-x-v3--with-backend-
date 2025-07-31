@@ -50,6 +50,7 @@ import BSidesUploadModal from '@/components/BSidesUploadModal';
 import BSidesEditModal from '@/components/BSidesEditModal';
 import BSidesSubscriptionModal from '@/components/BSidesSubscriptionModal';
 import BSidesManagement from '@/components/BSidesManagement';
+import { formatFollowerCount } from '@/utils/formatNumber';
 
 const { width } = Dimensions.get('window');
 
@@ -372,7 +373,7 @@ export default function ProfileScreen() {
                 style={styles.statItem}
                 onPress={() => setShowFollowersModal(true)}
               >
-                <Text style={styles.statValue}>{followers?.length || 0}</Text>
+                <Text style={styles.statValue}>{formatFollowerCount(currentUser?.stats?.totalFollowers || followers?.length || 0)}</Text>
                 <Text style={styles.statLabel}>Followers</Text>
               </TouchableOpacity>
               <View style={styles.statDivider} />
@@ -380,7 +381,7 @@ export default function ProfileScreen() {
                 style={styles.statItem}
                 onPress={() => setShowFollowingModal(true)}
               >
-                <Text style={styles.statValue}>{following?.length || 0}</Text>
+                <Text style={styles.statValue}>{formatFollowerCount(currentUser?.stats?.totalFollowing || following?.length || 0)}</Text>
                 <Text style={styles.statLabel}>Following</Text>
               </TouchableOpacity>
             </View>

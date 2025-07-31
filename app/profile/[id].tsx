@@ -38,6 +38,7 @@ import { useBSidesStore } from '@/store/bsides-store';
 import BSidesUploadModal from '@/components/BSidesUploadModal';
 import BSidesSubscriptionModal from '@/components/BSidesSubscriptionModal';
 import BSidesTrackList from '@/components/BSidesTrackList';
+import { formatFollowerCount } from '@/utils/formatNumber';
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams();
@@ -388,7 +389,7 @@ export default function UserProfileScreen() {
                 style={styles.statItem}
                 onPress={() => setShowFollowersModal(true)}
               >
-                <Text style={styles.statValue}>{user.followers}</Text>
+                <Text style={styles.statValue}>{formatFollowerCount(user.stats?.totalFollowers || user.followers || 0)}</Text>
                 <Text style={styles.statLabel}>Followers</Text>
               </TouchableOpacity>
               <View style={styles.statDivider} />
@@ -396,7 +397,7 @@ export default function UserProfileScreen() {
                 style={styles.statItem}
                 onPress={() => setShowFollowingModal(true)}
               >
-                <Text style={styles.statValue}>{user.following}</Text>
+                <Text style={styles.statValue}>{formatFollowerCount(user.stats?.totalFollowing || user.following || 0)}</Text>
                 <Text style={styles.statLabel}>Following</Text>
               </TouchableOpacity>
             </View>
