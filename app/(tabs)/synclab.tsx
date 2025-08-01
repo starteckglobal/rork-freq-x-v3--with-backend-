@@ -2062,27 +2062,32 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     marginBottom: 8,
+    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 18,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
+    paddingHorizontal: 16,
   },
   featureHighlights: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
     marginTop: 16,
+    paddingHorizontal: 8,
   },
   featureItem: {
     alignItems: 'center',
     padding: 12,
+    flex: 1,
   },
   featureText: {
     color: colors.textSecondary,
     marginTop: 8,
     fontSize: 14,
+    textAlign: 'center',
   },
   plansContainer: {
     padding: 24,
