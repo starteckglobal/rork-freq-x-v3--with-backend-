@@ -42,6 +42,7 @@ export interface PlaybackSettings {
   volumeNormalization: boolean;
   equalizerEnabled: boolean;
   equalizerPreset: string;
+  equalizerBandValues: number[];
   downloadLocation: 'internal' | 'external';
   maxDownloadStorage: number;
 }
@@ -114,6 +115,7 @@ const DEFAULT_PLAYBACK_SETTINGS: PlaybackSettings = {
   volumeNormalization: true,
   equalizerEnabled: false,
   equalizerPreset: 'flat',
+  equalizerBandValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
   downloadLocation: 'internal',
   maxDownloadStorage: 8192, // 8GB in MB
 };

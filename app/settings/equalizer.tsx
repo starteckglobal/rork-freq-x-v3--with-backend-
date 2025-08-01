@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -13,10 +13,12 @@ import { ChevronLeft, Volume2, RotateCcw, Save } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import Slider from '@/components/Slider';
 import StyledButton from '@/components/StyledButton';
+import { settingsService } from '@/services/settings';
+import createContextHook from '@nkzw/create-context-hook';
 
 const FREQUENCY_BANDS = [
   { label: '60Hz', frequency: 60 },
-  { label: '170Hz', frequency: 170 },
+  { label: '770Hz', frequency: 770 },
   { label: '310Hz', frequency: 310 },
   { label: '600Hz', frequency: 600 },
   { label: '1kHz', frequency: 1000 },
@@ -33,27 +35,179 @@ const PRESETS = {
   pop: { name: 'Pop', values: [-1, 2, 4, 4, 1, -1, -1, -1, 2, 3] },
   jazz: { name: 'Jazz', values: [3, 2, 1, 2, -1, -1, 0, 1, 2, 3] },
   classical: { name: 'Classical', values: [4, 3, 2, 1, -1, -1, 0, 2, 3, 4] },
-  electronic: { name: 'Electronic', values: [3, 2, 0, -1, 1, 3, 2, 1, 3, 4] },
-  hiphop: { name: 'Hip-Hop', values: [4, 3, 1, 2, -1, 0, 1, 2, 3, 3] },
-  vocal: { name: 'Vocal', values: [-2, -1, 1, 3, 3, 2, 1, 0, -1, -2] },
 };
+
+interface EqualizerSettings {
+  enabled: boolean;
+  preset: string;
+  bandValues: number[];
+  customValues: number[];
+}
+
+// Equalizer Context
+export const [EqualizerProvider, useEqualizer] = createContextHook(() => {
+  const [settings, setSettings] = useState<EqualizerSettings>({
+    enabled: false,
+    preset: 'flat',
+    bandValues: PRESETS.flat.values,
+    customValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load settings on initialization
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setIsLoading(true);
+      const playbackSettings = await settingsService.getPlaybackSettings();
+      
+      // Load custom equalizer settings from AsyncStorage
+      const customSettings = await AsyncStorage.getItem('equalizer_settings');
+      let equalizerData: EqualizerSettings;
+      
+      if (customSettings) {
+        const parsed = JSON.parse(customSettings);
+        equalizerData = {
+          enabled: playbackSettings.equalizerEnabled,
+          preset: playbackSettings.equalizerPreset,
+          bandValues: parsed.bandValues || PRESETS.flat.values,
+          customValues: parsed.customValues || [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        };
+      } else {
+        equalizerData = {
+          enabled: playbackSettings.equalizerEnabled,
+          preset: playbackSettings.equalizerPreset,
+          bandValues: PRESETS[playbackSettings.equalizerPreset as keyof typeof PRESETS]?.values || PRESETS.flat.values,
+          customValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        };
+      }
+      
+      setSettings(equalizerData);
+    } catch (error) {
+      console.error('Failed to load equalizer settings:', error);
+      setSettings({
+        enabled: false,
+        preset: 'flat',
+        bandValues: PRESETS.flat.values,
+        customValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveSettings = async (newSettings: EqualizerSettings) => {
+    try {
+      // Save to settings service
+      await settingsService.updatePlaybackSettings({
+        equalizerEnabled: newSettings.enabled,
+        equalizerPreset: newSettings.preset,
+      });
+      
+      // Save custom equalizer data to AsyncStorage
+      await AsyncStorage.setItem('equalizer_settings', JSON.stringify({
+        bandValues: newSettings.bandValues,
+        customValues: newSettings.customValues,
+      }));
+      
+      setSettings(newSettings);
+      console.log('Equalizer settings saved successfully');
+    } catch (error) {
+      console.error('Failed to save equalizer settings:', error);
+      throw error;
+    }
+  };
+
+  const updateEnabled = async (enabled: boolean) => {
+    const newSettings = { ...settings, enabled };
+    await saveSettings(newSettings);
+  };
+
+  const updatePreset = async (preset: string) => {
+    let bandValues: number[];
+    
+    if (preset === 'custom') {
+      bandValues = settings.customValues;
+    } else {
+      bandValues = PRESETS[preset as keyof typeof PRESETS]?.values || PRESETS.flat.values;
+    }
+    
+    const newSettings = { ...settings, preset, bandValues };
+    await saveSettings(newSettings);
+  };
+
+  const updateBandValue = async (index: number, value: number) => {
+    const newBandValues = [...settings.bandValues];
+    newBandValues[index] = value;
+    
+    const newCustomValues = [...newBandValues];
+    
+    const newSettings = {
+      ...settings,
+      preset: 'custom',
+      bandValues: newBandValues,
+      customValues: newCustomValues,
+    };
+    
+    await saveSettings(newSettings);
+  };
+
+  const resetToFlat = async () => {
+    const newSettings = {
+      ...settings,
+      preset: 'flat',
+      bandValues: PRESETS.flat.values,
+    };
+    await saveSettings(newSettings);
+  };
+
+  return {
+    settings,
+    isLoading,
+    updateEnabled,
+    updatePreset,
+    updateBandValue,
+    resetToFlat,
+    saveSettings,
+  };
+});
+
+// Add AsyncStorage import
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function EqualizerScreen() {
   const router = useRouter();
-  const [isEnabled, setIsEnabled] = useState(true);
-  const [selectedPreset, setSelectedPreset] = useState('flat');
-  const [bandValues, setBandValues] = useState(PRESETS.flat.values);
+  const { settings, isLoading, updateEnabled, updatePreset, updateBandValue, resetToFlat } = useEqualizer();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleBandChange = (index: number, value: number) => {
-    const newValues = [...bandValues];
-    newValues[index] = value;
-    setBandValues(newValues);
-    setSelectedPreset('custom');
+  const handleBandChange = async (index: number, value: number) => {
+    try {
+      await updateBandValue(index, value);
+    } catch (error) {
+      console.error('Failed to update band value:', error);
+      Alert.alert('Error', 'Failed to update equalizer setting');
+    }
   };
 
-  const handlePresetSelect = (presetKey: string) => {
-    setSelectedPreset(presetKey);
-    setBandValues(PRESETS[presetKey as keyof typeof PRESETS].values);
+  const handlePresetSelect = async (presetKey: string) => {
+    try {
+      await updatePreset(presetKey);
+    } catch (error) {
+      console.error('Failed to update preset:', error);
+      Alert.alert('Error', 'Failed to apply preset');
+    }
+  };
+
+  const handleToggleEnabled = async () => {
+    try {
+      await updateEnabled(!settings.enabled);
+    } catch (error) {
+      console.error('Failed to toggle equalizer:', error);
+      Alert.alert('Error', 'Failed to toggle equalizer');
+    }
   };
 
   const handleReset = () => {
@@ -64,22 +218,45 @@ export default function EqualizerScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Reset',
-          onPress: () => {
-            setBandValues(PRESETS.flat.values);
-            setSelectedPreset('flat');
+          onPress: async () => {
+            try {
+              await resetToFlat();
+            } catch (error) {
+              console.error('Failed to reset equalizer:', error);
+              Alert.alert('Error', 'Failed to reset equalizer');
+            }
           },
         },
       ]
     );
   };
 
-  const handleSave = () => {
-    Alert.alert(
-      'Success',
-      'Your equalizer settings have been saved',
-      [{ text: 'OK' }]
-    );
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      // Settings are already saved automatically, this is just for user feedback
+      Alert.alert(
+        'Success',
+        'Your equalizer settings have been saved and will persist across app restarts',
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      Alert.alert('Error', 'Failed to save equalizer settings');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading equalizer settings...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,10 +289,10 @@ export default function EqualizerScreen() {
               <Text style={styles.toggleTitle}>Equalizer</Text>
             </View>
             <TouchableOpacity
-              style={[styles.toggle, isEnabled && styles.toggleEnabled]}
-              onPress={() => setIsEnabled(!isEnabled)}
+              style={[styles.toggle, settings.enabled && styles.toggleEnabled]}
+              onPress={handleToggleEnabled}
             >
-              <View style={[styles.toggleThumb, isEnabled && styles.toggleThumbEnabled]} />
+              <View style={[styles.toggleThumb, settings.enabled && styles.toggleThumbEnabled]} />
             </TouchableOpacity>
           </View>
           <Text style={styles.toggleDescription}>
@@ -123,7 +300,7 @@ export default function EqualizerScreen() {
           </Text>
         </View>
 
-        {isEnabled && (
+        {settings.enabled && (
           <>
             {/* Presets */}
             <View style={styles.section}>
@@ -134,13 +311,13 @@ export default function EqualizerScreen() {
                     key={key}
                     style={[
                       styles.presetButton,
-                      selectedPreset === key && styles.presetButtonSelected
+                      settings.preset === key && styles.presetButtonSelected
                     ]}
                     onPress={() => handlePresetSelect(key)}
                   >
                     <Text style={[
                       styles.presetButtonText,
-                      selectedPreset === key && styles.presetButtonTextSelected
+                      settings.preset === key && styles.presetButtonTextSelected
                     ]}>
                       {preset.name}
                     </Text>
@@ -149,12 +326,12 @@ export default function EqualizerScreen() {
                 <TouchableOpacity
                   style={[
                     styles.presetButton,
-                    selectedPreset === 'custom' && styles.presetButtonSelected
+                    settings.preset === 'custom' && styles.presetButtonSelected
                   ]}
                 >
                   <Text style={[
                     styles.presetButtonText,
-                    selectedPreset === 'custom' && styles.presetButtonTextSelected
+                    settings.preset === 'custom' && styles.presetButtonTextSelected
                   ]}>
                     Custom
                   </Text>
@@ -166,16 +343,27 @@ export default function EqualizerScreen() {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Frequency Bands</Text>
               <View style={styles.equalizerContainer}>
+                {/* dB Scale Labels */}
+                <View style={styles.scaleContainer}>
+                  <Text style={styles.scaleLabel}>+12dB</Text>
+                  <Text style={styles.scaleLabel}>0dB</Text>
+                  <Text style={styles.scaleLabel}>-12dB</Text>
+                </View>
+                
+                {/* Frequency Bands */}
                 <View style={styles.bandsContainer}>
                   {FREQUENCY_BANDS.map((band, index) => (
                     <View key={band.frequency} style={styles.bandContainer}>
                       <View style={styles.sliderContainer}>
+                        {/* Current dB Value */}
                         <Text style={styles.gainValue}>
-                          {bandValues[index] > 0 ? '+' : ''}{bandValues[index]}dB
+                          {settings.bandValues[index] > 0 ? '+' : ''}{settings.bandValues[index]}dB
                         </Text>
+                        
+                        {/* Vertical Slider */}
                         <View style={styles.sliderWrapper}>
                           <Slider
-                            value={bandValues[index]}
+                            value={settings.bandValues[index]}
                             onValueChange={(value) => handleBandChange(index, Math.round(value))}
                             minimumValue={-12}
                             maximumValue={12}
@@ -184,9 +372,11 @@ export default function EqualizerScreen() {
                             style={styles.slider}
                             minimumTrackTintColor={colors.primary}
                             maximumTrackTintColor={colors.border}
-                            thumbStyle={styles.sliderThumb}
+                            thumbTintColor={colors.primary}
                           />
                         </View>
+                        
+                        {/* Frequency Label */}
                         <Text style={styles.frequencyLabel}>{band.label}</Text>
                       </View>
                     </View>
@@ -218,9 +408,10 @@ export default function EqualizerScreen() {
             {/* Save Button */}
             <View style={styles.buttonContainer}>
               <StyledButton
-                title="Save Settings"
+                title={isSaving ? "Saving..." : "Save Settings"}
                 onPress={handleSave}
                 style={styles.saveButton}
+                disabled={isSaving}
               />
             </View>
           </>
@@ -321,47 +512,75 @@ const styles = StyleSheet.create({
   },
   equalizerContainer: {
     alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  scaleContainer: {
+    position: 'absolute',
+    left: 0,
+    top: 24,
+    height: 140,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingRight: 8,
+    zIndex: 1,
+  },
+  scaleLabel: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '500',
   },
   bandsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     alignItems: 'flex-end',
     width: '100%',
+    paddingLeft: 40,
   },
   bandContainer: {
     flex: 1,
     alignItems: 'center',
+    maxWidth: 32,
   },
   sliderContainer: {
     alignItems: 'center',
     height: 200,
+    justifyContent: 'space-between',
   },
   gainValue: {
     color: colors.text,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 4,
     minHeight: 16,
+    textAlign: 'center',
+    minWidth: 32,
   },
   sliderWrapper: {
-    flex: 1,
+    height: 140,
+    width: 24,
     justifyContent: 'center',
     alignItems: 'center',
   },
   slider: {
-    height: 120,
-    width: 20,
-  },
-  sliderThumb: {
-    backgroundColor: colors.primary,
-    width: 16,
-    height: 16,
+    height: 140,
+    width: 24,
   },
   frequencyLabel: {
     color: colors.textSecondary,
     fontSize: 10,
-    marginTop: 8,
-    transform: [{ rotate: '-45deg' }],
+    fontWeight: '500',
+    marginTop: 4,
+    textAlign: 'center',
+    minWidth: 32,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: colors.text,
+    fontSize: 16,
   },
   infoSection: {
     backgroundColor: colors.card,
