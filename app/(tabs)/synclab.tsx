@@ -2062,6 +2062,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
     marginBottom: 8,
+    textAlign: 'center',
   },
   heroSubtitle: {
     fontSize: 18,
@@ -2072,20 +2073,25 @@ const styles = StyleSheet.create({
   featureHighlights: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    alignItems: 'center',
     width: '100%',
     marginTop: 16,
   },
   featureItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     padding: 12,
+    flex: 1,
   },
   featureText: {
     color: colors.textSecondary,
     marginTop: 8,
     fontSize: 14,
+    textAlign: 'center',
   },
   plansContainer: {
     padding: 24,
+    alignItems: 'center',
   },
   plansTitle: {
     fontSize: 24,
