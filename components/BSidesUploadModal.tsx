@@ -11,25 +11,50 @@ import {
   TouchableOpacity,
   TextInput
 } from 'react-native';
-import { X, Upload, CassetteTape } from 'lucide-react-native';
+import { X, Upload, CassetteTape, Crown, AlertCircle } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useBSidesStore } from '@/store/bsides-store';
 
 interface BSidesUploadModalProps {
   visible: boolean;
   onClose: () => void;
   onUpload: (title: string, description: string, file?: any) => void;
+  onUpgrade?: () => void;
 }
 
-export default function BSidesUploadModal({ visible, onClose, onUpload }: BSidesUploadModalProps) {
+export default function BSidesUploadModal({ visible, onClose, onUpload, onUpgrade }: BSidesUploadModalProps) {
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const { colors: themeColors } = useColorScheme();
+  const { 
+    canUpload, 
+    getRemainingUploads, 
+    getUploadLimit, 
+    isSubscribed 
+  } = useBSidesStore();
   const styles = createStyles(themeColors);
+  
+  const remainingUploads = getRemainingUploads();
+  const uploadLimit = getUploadLimit();
+  const isPaid = isSubscribed();
+  const canUploadTrack = canUpload();
 
   const handleUpload = async () => {
     if (!title.trim()) {
       Alert.alert('Error', 'Please enter a title for your track');
+      return;
+    }
+
+    if (!canUploadTrack) {
+      Alert.alert(
+        'Upload Limit Reached',
+        'You\'ve reached your upload limit. Upgrade to upload more songs.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => onUpgrade?.() }
+        ]
+      );
       return;
     }
 
@@ -83,6 +108,47 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <X size={24} color={themeColors.text} />
           </TouchableOpacity>
+        </View>
+
+        {/* Upload Limit Status */}
+        <View style={styles.limitStatus}>
+          {!isPaid && (
+            <View style={styles.limitInfo}>
+              <View style={styles.limitHeader}>
+                <Text style={styles.limitText}>
+                  Uploads: {uploadLimit === Infinity ? '∞' : `${uploadLimit - remainingUploads}/${uploadLimit}`}
+                </Text>
+                {remainingUploads !== Infinity && (
+                  <Text style={styles.remainingText}>
+                    {remainingUploads} remaining
+                  </Text>
+                )}
+              </View>
+              
+              {!canUploadTrack && (
+                <View style={styles.limitReached}>
+                  <AlertCircle size={16} color="#FF4444" />
+                  <Text style={styles.limitReachedText}>
+                    Upload limit reached. Upgrade to upload more songs.
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.upgradeButton}
+                    onPress={onUpgrade}
+                  >
+                    <Crown size={14} color={themeColors.text} />
+                    <Text style={styles.upgradeButtonText}>Upgrade</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+          
+          {isPaid && (
+            <View style={styles.unlimitedBadge}>
+              <Crown size={16} color={themeColors.primary} />
+              <Text style={styles.unlimitedText}>Unlimited uploads</Text>
+            </View>
+          )}
         </View>
 
         <ScrollView 
@@ -142,13 +208,18 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={[styles.button, styles.uploadButton, isUploading && styles.uploadButtonDisabled]} 
+              style={[
+                styles.button, 
+                styles.uploadButton, 
+                (isUploading || !canUploadTrack) && styles.uploadButtonDisabled
+              ]} 
               onPress={handleUpload}
-              disabled={isUploading || !title.trim()}
+              disabled={isUploading || !title.trim() || !canUploadTrack}
             >
               <Upload size={16} color={themeColors.text} />
               <Text style={styles.uploadButtonText}>
-                {isUploading ? 'Uploading...' : 'Upload Track'}
+                {isUploading ? 'Uploading...' : 
+                 !canUploadTrack ? 'Limit Reached' : 'Upload Track'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -266,6 +337,73 @@ const createStyles = (themeColors: any) => StyleSheet.create({
   uploadButtonText: {
     color: themeColors.text,
     fontSize: 16,
+    fontWeight: '600',
+  },
+  limitStatus: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: themeColors.border,
+  },
+  limitInfo: {
+    backgroundColor: themeColors.card,
+    borderRadius: 8,
+    padding: 12,
+  },
+  limitHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  limitText: {
+    color: themeColors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  remainingText: {
+    color: themeColors.textSecondary,
+    fontSize: 12,
+  },
+  limitReached: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 68, 68, 0.1)',
+    borderRadius: 6,
+    padding: 8,
+    gap: 8,
+  },
+  limitReachedText: {
+    flex: 1,
+    color: '#FF4444',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.primary,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    gap: 4,
+  },
+  upgradeButtonText: {
+    color: themeColors.text,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  unlimitedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.card,
+    borderRadius: 8,
+    padding: 12,
+    gap: 8,
+  },
+  unlimitedText: {
+    color: themeColors.primary,
+    fontSize: 14,
     fontWeight: '600',
   },
 });

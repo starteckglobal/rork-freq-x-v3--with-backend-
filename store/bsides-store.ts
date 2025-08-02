@@ -25,17 +25,24 @@ export interface BSidesState {
   // B-sides tracks
   bsideTracks: BSideTrack[];
   
+  // Upload limits
+  uploadCount: number;
+  
   // Actions
   subscribe: () => void;
   unsubscribe: () => void;
   isSubscribed: () => boolean;
-  uploadTrack: (title: string, description: string, artistId: string, artistName: string) => string;
+  uploadTrack: (title: string, description: string, artistId: string, artistName: string) => string | null;
   editTrack: (trackId: string, title: string, description: string) => void;
   deleteTrack: (trackId: string) => void;
   getTracksByArtist: (artistId: string) => BSideTrack[];
   likeTrack: (trackId: string) => void;
   playTrack: (trackId: string) => void;
   toggleTrackVisibility: (trackId: string) => void;
+  getUploadLimit: () => number;
+  getRemainingUploads: () => number;
+  canUpload: () => boolean;
+  resetUploadCount: () => void;
 }
 
 // Mock B-sides tracks for demo
@@ -80,6 +87,7 @@ export const useBSidesStore = create<BSidesState>()(
     (set, get) => ({
       hasSubscription: false,
       bsideTracks: mockBSideTracks,
+      uploadCount: 0,
       
       subscribe: () => {
         const now = new Date();
@@ -119,6 +127,13 @@ export const useBSidesStore = create<BSidesState>()(
       },
       
       uploadTrack: (title, description, artistId, artistName) => {
+        const { canUpload } = get();
+        
+        if (!canUpload()) {
+          console.log('Upload blocked: limit reached');
+          return null;
+        }
+        
         const newTrack: BSideTrack = {
           id: generateId(),
           title: title.trim(),
@@ -130,10 +145,13 @@ export const useBSidesStore = create<BSidesState>()(
           likes: 0,
         };
         
-        const { bsideTracks } = get();
+        const { bsideTracks, uploadCount } = get();
         const updatedTracks = [newTrack, ...bsideTracks];
         
-        set({ bsideTracks: updatedTracks });
+        set({ 
+          bsideTracks: updatedTracks,
+          uploadCount: uploadCount + 1
+        });
         
         console.log('B-side track uploaded:', newTrack.title);
         return newTrack.id;
@@ -153,10 +171,14 @@ export const useBSidesStore = create<BSidesState>()(
       },
       
       deleteTrack: (trackId) => {
-        const { bsideTracks } = get();
+        const { bsideTracks, uploadCount } = get();
+        const trackExists = bsideTracks.some(track => track.id === trackId);
         const updatedTracks = bsideTracks.filter(track => track.id !== trackId);
         
-        set({ bsideTracks: updatedTracks });
+        set({ 
+          bsideTracks: updatedTracks,
+          uploadCount: trackExists ? Math.max(0, uploadCount - 1) : uploadCount
+        });
         
         console.log('B-side track deleted:', trackId);
       },
@@ -197,6 +219,28 @@ export const useBSidesStore = create<BSidesState>()(
         // For now, we'll just log the action
         console.log('B-side track visibility toggled:', trackId);
       },
+      
+      getUploadLimit: () => {
+        const { isSubscribed } = get();
+        return isSubscribed() ? Infinity : 10;
+      },
+      
+      getRemainingUploads: () => {
+        const { getUploadLimit, uploadCount } = get();
+        const limit = getUploadLimit();
+        return limit === Infinity ? Infinity : Math.max(0, limit - uploadCount);
+      },
+      
+      canUpload: () => {
+        const { getRemainingUploads } = get();
+        const remaining = getRemainingUploads();
+        return remaining === Infinity || remaining > 0;
+      },
+      
+      resetUploadCount: () => {
+        set({ uploadCount: 0 });
+        console.log('Upload count reset');
+      },
     }),
     {
       name: 'bsides-storage',
@@ -206,6 +250,7 @@ export const useBSidesStore = create<BSidesState>()(
         subscriptionStartDate: state.subscriptionStartDate,
         subscriptionEndDate: state.subscriptionEndDate,
         bsideTracks: state.bsideTracks,
+        uploadCount: state.uploadCount,
       }),
     }
   )

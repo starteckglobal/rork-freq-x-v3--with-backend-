@@ -197,8 +197,15 @@ export default function ProfileScreen() {
   const handleBSidesUploadSubmit = (title: string, description: string) => {
     if (!currentUser) return;
     
-    uploadBSideTrack(title, description, currentUser.id, currentUser.displayName);
-    setShowBSidesUploadModal(false);
+    const trackId = uploadBSideTrack(title, description, currentUser.id, currentUser.displayName);
+    
+    if (trackId) {
+      setShowBSidesUploadModal(false);
+    } else {
+      // Upload failed due to limit - show subscription modal
+      setShowBSidesUploadModal(false);
+      setShowBSidesSubscriptionModal(true);
+    }
   };
   
   const handleBSidesEditSubmit = (trackId: string, title: string, description: string) => {
@@ -671,6 +678,7 @@ export default function ProfileScreen() {
                 onDeleteTrack={handleBSidesDelete}
                 onPlayTrack={handleBSidesPlay}
                 onToggleVisibility={handleBSidesVisibilityToggle}
+                onUpgrade={() => setShowBSidesSubscriptionModal(true)}
               />
             ) : (
               userBSidesTracks.length > 0 ? (
@@ -808,6 +816,10 @@ export default function ProfileScreen() {
         visible={showBSidesUploadModal}
         onClose={() => setShowBSidesUploadModal(false)}
         onUpload={handleBSidesUploadSubmit}
+        onUpgrade={() => {
+          setShowBSidesUploadModal(false);
+          setShowBSidesSubscriptionModal(true);
+        }}
       />
       
       <BSidesEditModal

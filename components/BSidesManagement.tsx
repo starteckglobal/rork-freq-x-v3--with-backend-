@@ -21,10 +21,11 @@ import {
   Clock,
   Heart,
   MoreVertical,
-  Filter
+  Filter,
+  Crown
 } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { BSideTrack } from '@/store/bsides-store';
+import { BSideTrack, useBSidesStore } from '@/store/bsides-store';
 
 interface BSidesManagementProps {
   tracks: BSideTrack[];
@@ -33,6 +34,7 @@ interface BSidesManagementProps {
   onDeleteTrack: (trackId: string) => void;
   onPlayTrack: (track: BSideTrack) => void;
   onToggleVisibility: (trackId: string) => void;
+  onUpgrade?: () => void;
 }
 
 type SortOption = 'date' | 'title' | 'plays' | 'likes';
@@ -44,7 +46,8 @@ export default function BSidesManagement({
   onEditTrack, 
   onDeleteTrack, 
   onPlayTrack,
-  onToggleVisibility 
+  onToggleVisibility,
+  onUpgrade 
 }: BSidesManagementProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('date');
@@ -52,7 +55,18 @@ export default function BSidesManagement({
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState<boolean>(false);
   const { colors: themeColors } = useColorScheme();
+  const { 
+    canUpload, 
+    getRemainingUploads, 
+    getUploadLimit, 
+    isSubscribed 
+  } = useBSidesStore();
   const styles = createStyles(themeColors);
+  
+  const remainingUploads = getRemainingUploads();
+  const uploadLimit = getUploadLimit();
+  const isPaid = isSubscribed();
+  const canUploadTrack = canUpload();
 
   const filteredAndSortedTracks = useMemo(() => {
     let filtered = tracks;
@@ -186,11 +200,45 @@ export default function BSidesManagement({
     <View style={styles.container}>
       {/* Header with Add Button */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Manage B-sides</Text>
-        <TouchableOpacity style={styles.addButton} onPress={onAddTrack}>
-          <Plus size={20} color={themeColors.text} />
-          <Text style={styles.addButtonText}>Add Song</Text>
-        </TouchableOpacity>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>Manage B-sides</Text>
+          {!isPaid && (
+            <Text style={styles.uploadLimitText}>
+              {uploadLimit === Infinity ? '∞' : `${uploadLimit - remainingUploads}/${uploadLimit}`} uploads used
+            </Text>
+          )}
+          {isPaid && (
+            <View style={styles.unlimitedBadge}>
+              <Crown size={12} color={themeColors.primary} />
+              <Text style={styles.unlimitedText}>Unlimited</Text>
+            </View>
+          )}
+        </View>
+        
+        <View style={styles.headerRight}>
+          {!canUploadTrack && !isPaid && (
+            <TouchableOpacity 
+              style={styles.upgradeButton} 
+              onPress={onUpgrade}
+            >
+              <Crown size={16} color={themeColors.text} />
+              <Text style={styles.upgradeButtonText}>Upgrade</Text>
+            </TouchableOpacity>
+          )}
+          
+          <TouchableOpacity 
+            style={[
+              styles.addButton,
+              !canUploadTrack && styles.addButtonDisabled
+            ]} 
+            onPress={canUploadTrack ? onAddTrack : onUpgrade}
+          >
+            <Plus size={20} color={themeColors.text} />
+            <Text style={styles.addButtonText}>
+              {canUploadTrack ? 'Add Song' : 'Limit Reached'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search and Filters */}
@@ -435,10 +483,49 @@ const createStyles = (themeColors: any) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  headerLeft: {
+    flex: 1,
+  },
   headerTitle: {
     color: themeColors.text,
     fontSize: 20,
     fontWeight: '700',
+    marginBottom: 2,
+  },
+  uploadLimitText: {
+    color: themeColors.textSecondary,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  unlimitedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  unlimitedText: {
+    color: themeColors.primary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  upgradeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeColors.cardElevated,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    gap: 4,
+  },
+  upgradeButtonText: {
+    color: themeColors.text,
+    fontSize: 12,
+    fontWeight: '600',
   },
   addButton: {
     flexDirection: 'row',
@@ -448,6 +535,10 @@ const createStyles = (themeColors: any) => StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 6,
+  },
+  addButtonDisabled: {
+    backgroundColor: themeColors.textSecondary,
+    opacity: 0.6,
   },
   addButtonText: {
     color: themeColors.text,
