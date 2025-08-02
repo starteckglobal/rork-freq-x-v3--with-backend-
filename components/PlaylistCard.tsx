@@ -56,11 +56,9 @@ export default PlaylistCard;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     marginRight: 12,
     flexShrink: 0,
-    minWidth: 140,
-    maxWidth: 200,
+    width: 148,
   },
   imageContainer: {
     position: 'relative',

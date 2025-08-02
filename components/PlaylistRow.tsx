@@ -21,20 +21,21 @@ const PlaylistRow = React.memo(function PlaylistRow({ title, playlists }: Playli
         horizontal={true}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        nestedScrollEnabled={true}
+        nestedScrollEnabled={false}
         scrollEventThrottle={16}
         decelerationRate="fast"
-        snapToInterval={Platform.OS === 'ios' ? 172 : undefined}
+        snapToInterval={160}
         snapToAlignment="start"
-        directionalLockEnabled={true}
+        directionalLockEnabled={false}
         bounces={Platform.OS === 'ios'}
         overScrollMode={Platform.OS === 'android' ? 'never' : 'auto'}
         removeClippedSubviews={false}
         keyboardShouldPersistTaps="handled"
         persistentScrollbar={false}
         pagingEnabled={false}
-        alwaysBounceHorizontal={Platform.OS === 'ios'}
+        alwaysBounceHorizontal={false}
         scrollEnabled={true}
+        disableIntervalMomentum={true}
       >
         {playlists.map((playlist, index) => (
           <PlaylistCard 
