@@ -10,7 +10,9 @@ import {
   Animated,
   StatusBar,
   ImageBackground,
-  Pressable
+  Pressable,
+  Share,
+  Alert
 } from 'react-native';
 import { 
   Play, 
@@ -252,24 +254,38 @@ export default function FullPlayer() {
     closePlayer();
   };
   
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!isLoggedIn) {
       setShowLoginModal(true);
       return;
     }
     
+    if (!currentTrack) return;
+    
     trackInteraction('share');
     
     // Track share
     analyticsEventBus.publish('track_share', {
-      track_id: currentTrack?.id || '',
-      track_title: currentTrack?.title || '',
+      track_id: currentTrack.id,
+      track_title: currentTrack.title,
       share_method: 'native_share',
       source: 'full_player',
     });
     
-    // Share functionality would go here
-    alert('Share functionality would be implemented here');
+    try {
+      const shareMessage = `Check out "${currentTrack.title}" by ${currentTrack.artist} on FREQ! 🎵`;
+      const result = await Share.share({
+        message: shareMessage,
+        title: currentTrack.title,
+      });
+      
+      if (result.action === Share.sharedAction) {
+        console.log('Track shared successfully from full player');
+      }
+    } catch (error) {
+      console.error('Error sharing track:', error);
+      Alert.alert('Error', 'Unable to share track at this time');
+    }
   };
   
   const handleRewind = () => {

@@ -6,7 +6,9 @@ import {
   SafeAreaView, 
   Image, 
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Share,
+  Alert
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { 
@@ -186,7 +188,25 @@ export default function TrackDetailScreen() {
                 />
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={async () => {
+                  try {
+                    const shareMessage = `Check out "${track.title}" by ${track.artist} on FREQ! 🎵`;
+                    const result = await Share.share({
+                      message: shareMessage,
+                      title: track.title,
+                    });
+                    
+                    if (result.action === Share.sharedAction) {
+                      console.log('Track shared successfully from track detail');
+                    }
+                  } catch (error) {
+                    console.error('Error sharing track:', error);
+                    Alert.alert('Error', 'Unable to share track at this time');
+                  }
+                }}
+              >
                 <Share2 size={20} color={colors.icon} />
               </TouchableOpacity>
               

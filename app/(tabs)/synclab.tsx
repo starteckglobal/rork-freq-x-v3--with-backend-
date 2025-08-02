@@ -1416,7 +1416,25 @@ export default function SyncLabScreen() {
                             <Text style={styles.copyButtonText}>Copy</Text>
                           </TouchableOpacity>
                         </View>
-                        <TouchableOpacity style={styles.shareButton}>
+                        <TouchableOpacity 
+                          style={styles.shareButton}
+                          onPress={async () => {
+                            try {
+                              const shareMessage = `Check out this sync collaboration on FREQ! Join the session and create music together. 🎵`;
+                              const result = await Share.share({
+                                message: shareMessage,
+                                title: 'FREQ Sync Session',
+                              });
+                              
+                              if (result.action === Share.sharedAction) {
+                                console.log('Sync session shared successfully');
+                              }
+                            } catch (error) {
+                              console.error('Error sharing sync session:', error);
+                              Alert.alert('Error', 'Unable to share sync session at this time');
+                            }
+                          }}
+                        >
                           <Share2 size={18} color={colors.text} />
                           <Text style={styles.shareButtonText}>Share Link</Text>
                         </TouchableOpacity>

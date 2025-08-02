@@ -8,7 +8,8 @@ import {
   ScrollView, 
   SafeAreaView,
   ActivityIndicator,
-  Alert
+  Alert,
+  Share
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { 
@@ -114,8 +115,23 @@ export default function PlaylistScreen() {
     }
   };
   
-  const handleShare = () => {
-    Alert.alert("Share", "Sharing functionality would be implemented here.");
+  const handleShare = async () => {
+    if (!playlist) return;
+    
+    try {
+      const shareMessage = `Check out "${playlist.name}" playlist on FREQ! 🎵 ${playlist.tracks.length} tracks of amazing music.`;
+      const result = await Share.share({
+        message: shareMessage,
+        title: playlist.name,
+      });
+      
+      if (result.action === Share.sharedAction) {
+        console.log('Playlist shared successfully');
+      }
+    } catch (error) {
+      console.error('Error sharing playlist:', error);
+      Alert.alert('Error', 'Unable to share playlist at this time');
+    }
   };
   
   const handleDownload = () => {

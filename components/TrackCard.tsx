@@ -6,7 +6,8 @@ import {
   Image, 
   TouchableOpacity, 
   Alert,
-  Platform
+  Platform,
+  Share
 } from 'react-native';
 import { Play, Pause, Heart, MoreHorizontal, Plus } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -187,7 +188,7 @@ export default function TrackCard({
         },
         {
           text: "Share",
-          onPress: () => {
+          onPress: async () => {
             analyticsEventBus.publish('custom_event', {
               category: 'sharing',
               action: 'track_share',
@@ -196,7 +197,21 @@ export default function TrackCard({
               share_method: 'native_share',
               source: 'track_options',
             });
-            Alert.alert("Share", "Sharing functionality would be implemented here");
+            
+            try {
+              const shareMessage = `Check out "${track.title}" by ${track.artist} on FREQ! 🎵`;
+              const result = await Share.share({
+                message: shareMessage,
+                title: track.title,
+              });
+              
+              if (result.action === Share.sharedAction) {
+                console.log('Track shared successfully');
+              }
+            } catch (error) {
+              console.error('Error sharing track:', error);
+              Alert.alert('Error', 'Unable to share track at this time');
+            }
           },
         },
         {
