@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ChevronLeft, DollarSign, TrendingUp, Calendar, Download } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 
 const { width: screenWidth } = Dimensions.get('window');
 
