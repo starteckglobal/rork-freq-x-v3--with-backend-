@@ -15,7 +15,8 @@ import {
   Search, 
   ChevronLeft,
   MessageCircle,
-  UserPlus
+  UserPlus,
+  X
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { users } from '@/mocks/users';
@@ -91,14 +92,23 @@ export default function NewMessageScreen() {
       
       <View style={styles.content}>
         <View style={styles.searchContainer}>
-          <StyledInput
-            placeholder="Search for people"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus
-            containerStyle={styles.styledSearchInput}
-
-          />
+          <View style={styles.searchInputWrapper}>
+            <StyledInput
+              placeholder="Search for people"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              autoFocus
+              containerStyle={styles.styledSearchInput}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity 
+                onPress={() => setSearchQuery('')} 
+                style={styles.clearButton}
+              >
+                <X size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
         
         <FlatList
@@ -202,6 +212,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   styledSearchInput: {
+    flex: 1,
+    maxWidth: '100%',
+  },
+  searchInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
     width: '100%',
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 12,
+    top: 0,
+    bottom: 0,
+    width: 30,
+    height: 30,
+    alignSelf: 'center',
+    marginTop: 'auto',
+    marginBottom: 'auto',
+    zIndex: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
