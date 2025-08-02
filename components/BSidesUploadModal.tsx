@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { X, Upload, CassetteTape } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface BSidesUploadModalProps {
   visible: boolean;
@@ -24,6 +25,9 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
+  const colorScheme = useColorScheme();
+  const themeColors = colors[colorScheme ?? 'dark'];
+  const styles = createStyles(themeColors);
 
   const handleUpload = async () => {
     if (!title.trim()) {
@@ -79,7 +83,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
         <View style={styles.header}>
           <Text style={styles.title}>Upload B-side Track</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color={colors.text} />
+            <X size={24} color={themeColors.text} />
           </TouchableOpacity>
         </View>
 
@@ -94,7 +98,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
               onPress={handleFileSelect}
               disabled={isUploading}
             >
-              <CassetteTape size={32} color={colors.primary} />
+              <CassetteTape size={32} color={themeColors.primary} />
               <Text style={styles.fileUploadText}>Select Audio File</Text>
               <Text style={styles.fileUploadSubtext}>MP3, WAV, M4A supported</Text>
             </TouchableOpacity>
@@ -108,7 +112,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Enter track title"
-                placeholderTextColor={colors.textSecondary}
+                placeholderTextColor={themeColors.textSecondary}
                 maxLength={100}
                 editable={!isUploading}
               />
@@ -121,7 +125,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Tell your fans about this exclusive track..."
-                placeholderTextColor={colors.textSecondary}
+                placeholderTextColor={themeColors.textSecondary}
                 multiline
                 numberOfLines={4}
                 maxLength={500}
@@ -144,7 +148,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
               onPress={handleUpload}
               disabled={isUploading || !title.trim()}
             >
-              <Upload size={16} color={colors.text} />
+              <Upload size={16} color={themeColors.text} />
               <Text style={styles.uploadButtonText}>
                 {isUploading ? 'Uploading...' : 'Upload Track'}
               </Text>
@@ -156,10 +160,10 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -167,10 +171,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
   },
   title: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -188,22 +192,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   fileUploadButton: {
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 12,
     padding: 32,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     borderStyle: 'dashed',
   },
   fileUploadText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
     marginTop: 12,
   },
   fileUploadSubtext: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
     marginTop: 4,
   },
@@ -214,19 +218,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 8,
     padding: 12,
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   textArea: {
     height: 100,
@@ -247,22 +251,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cancelButton: {
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
   },
   cancelButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   uploadButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
   },
   uploadButtonDisabled: {
-    backgroundColor: colors.textSecondary,
+    backgroundColor: themeColors.textSecondary,
     opacity: 0.6,
   },
   uploadButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
   },

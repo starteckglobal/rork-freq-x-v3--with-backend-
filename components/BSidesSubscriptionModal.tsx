@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { X, Crown, CassetteTape, Upload, Users, Star } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface BSidesSubscriptionModalProps {
   visible: boolean;
@@ -19,6 +20,9 @@ interface BSidesSubscriptionModalProps {
 
 export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe }: BSidesSubscriptionModalProps) {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const colorScheme = useColorScheme();
+  const themeColors = colors[colorScheme ?? 'dark'];
+  const styles = createStyles(themeColors);
 
   const handleSubscribe = async () => {
     setIsProcessing(true);
@@ -48,15 +52,15 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
         <View style={styles.header}>
           <Text style={styles.title}>B-sides Premium</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color={colors.text} />
+            <X size={24} color={themeColors.text} />
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
           <View style={styles.heroSection}>
             <View style={styles.iconContainer}>
-              <CassetteTape size={48} color={colors.primary} />
-              <Crown size={24} color={colors.primary} style={styles.crownIcon} />
+              <CassetteTape size={48} color={themeColors.primary} />
+              <Crown size={24} color={themeColors.primary} style={styles.crownIcon} />
             </View>
             <Text style={styles.heroTitle}>Unlock B-sides</Text>
             <Text style={styles.heroSubtitle}>
@@ -73,7 +77,7 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
             <Text style={styles.featuresTitle}>What you get:</Text>
             
             <View style={styles.feature}>
-              <Upload size={20} color={colors.primary} />
+              <Upload size={20} color={themeColors.primary} />
               <View style={styles.featureText}>
                 <Text style={styles.featureTitle}>Exclusive Uploads</Text>
                 <Text style={styles.featureDescription}>
@@ -83,7 +87,7 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
             </View>
 
             <View style={styles.feature}>
-              <Users size={20} color={colors.primary} />
+              <Users size={20} color={themeColors.primary} />
               <View style={styles.featureText}>
                 <Text style={styles.featureTitle}>Fan Engagement</Text>
                 <Text style={styles.featureDescription}>
@@ -93,7 +97,7 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
             </View>
 
             <View style={styles.feature}>
-              <Star size={20} color={colors.primary} />
+              <Star size={20} color={themeColors.primary} />
               <View style={styles.featureText}>
                 <Text style={styles.featureTitle}>Premium Badge</Text>
                 <Text style={styles.featureDescription}>
@@ -109,7 +113,7 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
               onPress={handleSubscribe}
               disabled={isProcessing}
             >
-              <Crown size={20} color={colors.text} />
+              <Crown size={20} color={themeColors.text} />
               <Text style={styles.subscribeButtonText}>
                 {isProcessing ? 'Processing...' : 'Subscribe for $9.99/month'}
               </Text>
@@ -136,10 +140,10 @@ export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe 
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -147,10 +151,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
   },
   title: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -177,13 +181,13 @@ const styles = StyleSheet.create({
     right: -8,
   },
   heroTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 28,
     fontWeight: '700',
     marginBottom: 8,
   },
   heroSubtitle: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 22,
@@ -193,12 +197,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   priceText: {
-    color: colors.primary,
+    color: themeColors.primary,
     fontSize: 48,
     fontWeight: '700',
   },
   priceSubtext: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 16,
     marginTop: 4,
   },
@@ -206,7 +210,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   featuresTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
@@ -221,13 +225,13 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   featureTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
   featureDescription: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -235,7 +239,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   subscribeButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -246,11 +250,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   subscribeButtonDisabled: {
-    backgroundColor: colors.textSecondary,
+    backgroundColor: themeColors.textSecondary,
     opacity: 0.6,
   },
   subscribeButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -259,17 +263,17 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   cancelButtonText: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 16,
     fontWeight: '500',
   },
   disclaimer: {
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: themeColors.border,
   },
   disclaimerText: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',

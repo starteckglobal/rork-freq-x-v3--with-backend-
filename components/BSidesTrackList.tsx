@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Play, Heart, Clock, Calendar } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 
 interface BSidesTrackListProps {
@@ -17,6 +18,10 @@ interface BSidesTrackListProps {
 }
 
 export default function BSidesTrackList({ tracks, onTrackPress, onLikePress }: BSidesTrackListProps) {
+  const colorScheme = useColorScheme();
+  const themeColors = colors[colorScheme ?? 'dark'];
+  const styles = createStyles(themeColors);
+
   const formatDuration = (seconds?: number) => {
     if (!seconds) return '--:--';
     const mins = Math.floor(seconds / 60);
@@ -75,18 +80,18 @@ export default function BSidesTrackList({ tracks, onTrackPress, onLikePress }: B
                 style={styles.playButton}
                 onPress={() => onTrackPress(track)}
               >
-                <Play size={16} color={colors.text} fill={colors.text} />
+                <Play size={16} color={themeColors.text} fill={themeColors.text} />
               </TouchableOpacity>
             </View>
             
             <View style={styles.trackMeta}>
               <View style={styles.metaItem}>
-                <Calendar size={12} color={colors.textSecondary} />
+                <Calendar size={12} color={themeColors.textSecondary} />
                 <Text style={styles.metaText}>{formatDate(track.uploadedAt)}</Text>
               </View>
               
               <View style={styles.metaItem}>
-                <Clock size={12} color={colors.textSecondary} />
+                <Clock size={12} color={themeColors.textSecondary} />
                 <Text style={styles.metaText}>{formatDuration(track.duration)}</Text>
               </View>
               
@@ -98,7 +103,7 @@ export default function BSidesTrackList({ tracks, onTrackPress, onLikePress }: B
                 style={styles.likeButton}
                 onPress={() => onLikePress(track.id)}
               >
-                <Heart size={12} color={colors.textSecondary} />
+                <Heart size={12} color={themeColors.textSecondary} />
                 <Text style={styles.metaText}>{track.likes}</Text>
               </TouchableOpacity>
             </View>
@@ -109,12 +114,12 @@ export default function BSidesTrackList({ tracks, onTrackPress, onLikePress }: B
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
   trackItem: {
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
@@ -135,18 +140,18 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   trackTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
   trackDescription: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
   playButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -165,7 +170,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -179,18 +184,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 12,
     marginTop: 16,
   },
   emptyStateTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
   },
   emptyStateText: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,

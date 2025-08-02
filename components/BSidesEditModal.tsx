@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { X, Save, Music, Upload } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 
 interface BSidesEditModalProps {
@@ -27,6 +28,9 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
   const [description, setDescription] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
+  const colorScheme = useColorScheme();
+  const themeColors = colors[colorScheme ?? 'dark'];
+  const styles = createStyles(themeColors);
 
   useEffect(() => {
     if (track) {
@@ -121,7 +125,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
         <View style={styles.header}>
           <Text style={styles.title}>Edit B-side Track</Text>
           <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
-            <X size={24} color={colors.text} />
+            <X size={24} color={themeColors.text} />
           </TouchableOpacity>
         </View>
 
@@ -132,7 +136,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
         >
           <View style={styles.currentFileSection}>
             <View style={styles.currentFileInfo}>
-              <Music size={24} color={colors.primary} />
+              <Music size={24} color={themeColors.primary} />
               <View style={styles.fileDetails}>
                 <Text style={styles.fileName}>Current Audio File</Text>
                 <Text style={styles.fileSubtext}>Uploaded {new Date(track.uploadedAt).toLocaleDateString()}</Text>
@@ -144,7 +148,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
               onPress={handleFileReplace}
               disabled={isSaving}
             >
-              <Upload size={16} color={colors.primary} />
+              <Upload size={16} color={themeColors.primary} />
               <Text style={styles.replaceFileText}>Replace</Text>
             </TouchableOpacity>
           </View>
@@ -157,7 +161,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
                 value={title}
                 onChangeText={setTitle}
                 placeholder="Enter track title"
-                placeholderTextColor={colors.textSecondary}
+                placeholderTextColor={themeColors.textSecondary}
                 maxLength={100}
                 editable={!isSaving}
               />
@@ -170,7 +174,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
                 value={description}
                 onChangeText={setDescription}
                 placeholder="Tell your fans about this exclusive track..."
-                placeholderTextColor={colors.textSecondary}
+                placeholderTextColor={themeColors.textSecondary}
                 multiline
                 numberOfLines={4}
                 maxLength={500}
@@ -197,7 +201,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
               onPress={handleSave}
               disabled={isSaving || !title.trim() || !hasChanges}
             >
-              <Save size={16} color={colors.text} />
+              <Save size={16} color={themeColors.text} />
               <Text style={styles.saveButtonText}>
                 {isSaving ? 'Saving...' : hasChanges ? 'Save Changes' : 'No Changes'}
               </Text>
@@ -209,10 +213,10 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: themeColors.background,
   },
   header: {
     flexDirection: 'row',
@@ -220,10 +224,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomColor: themeColors.border,
   },
   title: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: '600',
   },
@@ -238,7 +242,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   currentFileSection: {
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -256,26 +260,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fileName: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   fileSubtext: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
     marginTop: 2,
   },
   replaceFileButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     gap: 6,
   },
   replaceFileText: {
-    color: colors.primary,
+    color: themeColors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -286,19 +290,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 8,
     padding: 12,
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
   },
   textArea: {
     height: 100,
@@ -319,22 +323,22 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   cancelButton: {
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
   },
   cancelButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
   },
   saveButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
   },
   saveButtonDisabled: {
-    backgroundColor: colors.textSecondary,
+    backgroundColor: themeColors.textSecondary,
     opacity: 0.6,
   },
   saveButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
   },

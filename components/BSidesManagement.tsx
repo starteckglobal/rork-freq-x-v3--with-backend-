@@ -24,6 +24,7 @@ import {
   Filter
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 
 interface BSidesManagementProps {
@@ -51,6 +52,9 @@ export default function BSidesManagement({
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState<boolean>(false);
+  const colorScheme = useColorScheme();
+  const themeColors = colors[colorScheme ?? 'dark'];
+  const styles = createStyles(themeColors);
 
   const filteredAndSortedTracks = useMemo(() => {
     let filtered = tracks;
@@ -186,7 +190,7 @@ export default function BSidesManagement({
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Manage B-sides</Text>
         <TouchableOpacity style={styles.addButton} onPress={onAddTrack}>
-          <Plus size={20} color={colors.text} />
+          <Plus size={20} color={themeColors.text} />
           <Text style={styles.addButtonText}>Add Song</Text>
         </TouchableOpacity>
       </View>
@@ -194,11 +198,11 @@ export default function BSidesManagement({
       {/* Search and Filters */}
       <View style={styles.controlsSection}>
         <View style={styles.searchContainer}>
-          <Search size={16} color={colors.textSecondary} />
+          <Search size={16} color={themeColors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search your B-sides..."
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor={themeColors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -227,7 +231,7 @@ export default function BSidesManagement({
                  sortBy === 'title' ? 'Title' : 
                  sortBy === 'plays' ? 'Plays' : 'Likes'}
               </Text>
-              <Filter size={14} color={colors.textSecondary} />
+              <Filter size={14} color={themeColors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -252,7 +256,7 @@ export default function BSidesManagement({
                 {filterBy === 'all' ? 'All' : 
                  filterBy === 'public' ? 'Public' : 'Private'}
               </Text>
-              <Filter size={14} color={colors.textSecondary} />
+              <Filter size={14} color={themeColors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -269,7 +273,7 @@ export default function BSidesManagement({
               style={styles.bulkActionButton}
               onPress={handleBulkVisibilityToggle}
             >
-              <EyeOff size={16} color={colors.text} />
+              <EyeOff size={16} color={themeColors.text} />
               <Text style={styles.bulkActionText}>Toggle</Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -307,7 +311,7 @@ export default function BSidesManagement({
             </Text>
             {!searchQuery && (
               <TouchableOpacity style={styles.emptyStateButton} onPress={onAddTrack}>
-                <Plus size={16} color={colors.text} />
+                <Plus size={16} color={themeColors.text} />
                 <Text style={styles.emptyStateButtonText}>Add Your First B-side</Text>
               </TouchableOpacity>
             )}
@@ -347,9 +351,9 @@ export default function BSidesManagement({
                       </Text>
                       <View style={styles.visibilityIndicator}>
                         {isTrackPublic(track.id) ? (
-                          <Eye size={12} color={colors.primary} />
+                          <Eye size={12} color={themeColors.primary} />
                         ) : (
-                          <EyeOff size={12} color={colors.textSecondary} />
+                          <EyeOff size={12} color={themeColors.textSecondary} />
                         )}
                       </View>
                     </View>
@@ -361,12 +365,12 @@ export default function BSidesManagement({
 
                 <View style={styles.trackMeta}>
                   <View style={styles.metaItem}>
-                    <Calendar size={12} color={colors.textSecondary} />
+                    <Calendar size={12} color={themeColors.textSecondary} />
                     <Text style={styles.metaText}>{formatDate(track.uploadedAt)}</Text>
                   </View>
                   
                   <View style={styles.metaItem}>
-                    <Clock size={12} color={colors.textSecondary} />
+                    <Clock size={12} color={themeColors.textSecondary} />
                     <Text style={styles.metaText}>{formatDuration(track.duration)}</Text>
                   </View>
                   
@@ -375,7 +379,7 @@ export default function BSidesManagement({
                   </View>
                   
                   <View style={styles.metaItem}>
-                    <Heart size={12} color={colors.textSecondary} />
+                    <Heart size={12} color={themeColors.textSecondary} />
                     <Text style={styles.metaText}>{track.likes}</Text>
                   </View>
                 </View>
@@ -387,14 +391,14 @@ export default function BSidesManagement({
                   style={styles.actionButton}
                   onPress={() => onPlayTrack(track)}
                 >
-                  <Play size={16} color={colors.primary} />
+                  <Play size={16} color={themeColors.primary} />
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
                   style={styles.actionButton}
                   onPress={() => onEditTrack(track)}
                 >
-                  <Edit size={16} color={colors.text} />
+                  <Edit size={16} color={themeColors.text} />
                 </TouchableOpacity>
                 
                 <TouchableOpacity 
@@ -402,9 +406,9 @@ export default function BSidesManagement({
                   onPress={() => onToggleVisibility(track.id)}
                 >
                   {isTrackPublic(track.id) ? (
-                    <EyeOff size={16} color={colors.textSecondary} />
+                    <EyeOff size={16} color={themeColors.textSecondary} />
                   ) : (
-                    <Eye size={16} color={colors.textSecondary} />
+                    <Eye size={16} color={themeColors.textSecondary} />
                   )}
                 </TouchableOpacity>
                 
@@ -423,7 +427,7 @@ export default function BSidesManagement({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (themeColors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -434,21 +438,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   headerTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 20,
     fontWeight: '700',
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 6,
   },
   addButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -458,7 +462,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -467,7 +471,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
   },
   filtersRow: {
@@ -479,7 +483,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   filterLabel: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 12,
     marginBottom: 4,
   },
@@ -487,13 +491,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
   },
   filterButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -501,14 +505,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     marginBottom: 12,
   },
   bulkActionsText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -519,7 +523,7 @@ const styles = StyleSheet.create({
   bulkActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
@@ -529,7 +533,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 68, 68, 0.1)',
   },
   bulkActionText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -543,7 +547,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   selectAllText: {
-    color: colors.primary,
+    color: themeColors.primary,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -553,16 +557,16 @@ const styles = StyleSheet.create({
   trackItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     gap: 12,
   },
   trackItemSelected: {
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: themeColors.primary,
   },
   lastTrackItem: {
     marginBottom: 0,
@@ -575,16 +579,16 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: themeColors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: themeColors.primary,
+    borderColor: themeColors.primary,
   },
   checkmark: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -604,7 +608,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   trackTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 16,
     fontWeight: '600',
     flex: 1,
@@ -614,7 +618,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   trackDescription: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
   },
   trackMeta: {
@@ -629,7 +633,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaText: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -641,7 +645,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.cardElevated,
+    backgroundColor: themeColors.cardElevated,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -652,18 +656,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
-    backgroundColor: colors.card,
+    backgroundColor: themeColors.card,
     borderRadius: 12,
     marginTop: 16,
   },
   emptyStateTitle: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
   },
   emptyStateText: {
-    color: colors.textSecondary,
+    color: themeColors.textSecondary,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
@@ -672,14 +676,14 @@ const styles = StyleSheet.create({
   emptyStateButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: themeColors.primary,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
     gap: 8,
   },
   emptyStateButtonText: {
-    color: colors.text,
+    color: themeColors.text,
     fontSize: 14,
     fontWeight: '600',
   },
