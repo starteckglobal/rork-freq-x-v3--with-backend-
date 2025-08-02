@@ -7,7 +7,6 @@ import {
   ScrollView,
 } from 'react-native';
 import { Play, Heart, Clock, Calendar } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 
@@ -18,8 +17,7 @@ interface BSidesTrackListProps {
 }
 
 export default function BSidesTrackList({ tracks, onTrackPress, onLikePress }: BSidesTrackListProps) {
-  const colorScheme = useColorScheme();
-  const themeColors = colors[colorScheme ?? 'dark'];
+  const { colors: themeColors } = useColorScheme();
   const styles = createStyles(themeColors);
 
   const formatDuration = (seconds?: number) => {

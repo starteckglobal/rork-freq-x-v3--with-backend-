@@ -9,7 +9,6 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { X, Crown, CassetteTape, Upload, Users, Star } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface BSidesSubscriptionModalProps {
@@ -20,8 +19,7 @@ interface BSidesSubscriptionModalProps {
 
 export default function BSidesSubscriptionModal({ visible, onClose, onSubscribe }: BSidesSubscriptionModalProps) {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const colorScheme = useColorScheme();
-  const themeColors = colors[colorScheme ?? 'dark'];
+  const { colors: themeColors } = useColorScheme();
   const styles = createStyles(themeColors);
 
   const handleSubscribe = async () => {

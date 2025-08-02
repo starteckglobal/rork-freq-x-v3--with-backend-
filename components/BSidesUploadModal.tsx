@@ -12,7 +12,6 @@ import {
   TextInput
 } from 'react-native';
 import { X, Upload, CassetteTape } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface BSidesUploadModalProps {
@@ -25,8 +24,7 @@ export default function BSidesUploadModal({ visible, onClose, onUpload }: BSides
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
-  const colorScheme = useColorScheme();
-  const themeColors = colors[colorScheme ?? 'dark'];
+  const { colors: themeColors } = useColorScheme();
   const styles = createStyles(themeColors);
 
   const handleUpload = async () => {

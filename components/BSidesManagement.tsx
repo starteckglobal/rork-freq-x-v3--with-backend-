@@ -23,7 +23,6 @@ import {
   MoreVertical,
   Filter
 } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 
@@ -52,8 +51,7 @@ export default function BSidesManagement({
   const [filterBy, setFilterBy] = useState<FilterOption>('all');
   const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState<boolean>(false);
-  const colorScheme = useColorScheme();
-  const themeColors = colors[colorScheme ?? 'dark'];
+  const { colors: themeColors } = useColorScheme();
   const styles = createStyles(themeColors);
 
   const filteredAndSortedTracks = useMemo(() => {

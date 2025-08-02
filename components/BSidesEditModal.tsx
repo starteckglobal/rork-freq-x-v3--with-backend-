@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { X, Save, Music, Upload } from 'lucide-react-native';
-import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 
@@ -28,8 +27,7 @@ export default function BSidesEditModal({ visible, onClose, onSave, track }: BSi
   const [description, setDescription] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
-  const colorScheme = useColorScheme();
-  const themeColors = colors[colorScheme ?? 'dark'];
+  const { colors: themeColors } = useColorScheme();
   const styles = createStyles(themeColors);
 
   useEffect(() => {
