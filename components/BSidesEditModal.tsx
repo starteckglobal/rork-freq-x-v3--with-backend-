@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { X, Save, Music, Upload } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack } from '@/store/bsides-store';
 

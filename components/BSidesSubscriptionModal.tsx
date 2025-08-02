@@ -9,7 +9,7 @@ import {
   TouchableOpacity
 } from 'react-native';
 import { X, Crown, CassetteTape, Upload, Users, Star } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface BSidesSubscriptionModalProps {

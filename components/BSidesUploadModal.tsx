@@ -12,7 +12,7 @@ import {
   TextInput
 } from 'react-native';
 import { X, Upload, CassetteTape } from 'lucide-react-native';
-import { colors } from '@/constants/colors';
+import colors from '@/constants/colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 interface BSidesUploadModalProps {
