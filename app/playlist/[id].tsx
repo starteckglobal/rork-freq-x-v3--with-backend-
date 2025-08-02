@@ -34,8 +34,7 @@ import { usePlayerStore } from '@/store/player-store';
 import { tracks } from '@/mocks/tracks';
 import { playlists } from '@/mocks/playlists';
 import { users } from '@/mocks/users';
-import { Track, Playlist as AudioPlaylist } from '@/types/audio';
-import { Playlist as UserPlaylist } from '@/store/user-store';
+import { Track, Playlist } from '@/types/audio';
 
 export default function PlaylistScreen() {
   const { id } = useLocalSearchParams();

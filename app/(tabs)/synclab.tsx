@@ -11,7 +11,8 @@ import {
   ActivityIndicator,
   TextInput,
   Platform,
-  Dimensions
+  Dimensions,
+  Share
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { 
