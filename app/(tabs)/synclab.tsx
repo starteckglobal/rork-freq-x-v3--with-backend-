@@ -85,10 +85,22 @@ import SignupPaymentModal from '@/components/SignupPaymentModal';
 const { width } = Dimensions.get('window');
 
 // Define subscription plan types
-type SubscriptionPlanId = 'monthly' | 'yearly' | 'premium';
+type SubscriptionPlanId = 'free' | 'monthly' | 'yearly' | 'premium';
 
 // Define subscription plans
 const subscriptionPlans = [
+  {
+    id: 'free' as SubscriptionPlanId,
+    name: 'FREE Plan',
+    price: '$0.00',
+    period: 'per month',
+    features: [
+      '10 track uploads max',
+      'Basic features',
+      'Ads included'
+    ],
+    popular: false
+  },
   {
     id: 'monthly' as SubscriptionPlanId,
     name: 'Monthly Plan',
@@ -376,7 +388,7 @@ export default function SyncLabScreen() {
   const router = useRouter();
   const { isLoggedIn, setShowLoginModal, currentUser, subscribeToPlan, hasFeatureAccess } = useUserStore();
   const { currentTrack, isMinimized } = usePlayerStore();
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanId>('yearly');
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanId>('free');
   const [loading, setLoading] = useState<boolean>(false);
   const [showSubscriptionSection, setShowSubscriptionSection] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('overview');
@@ -442,9 +454,14 @@ export default function SyncLabScreen() {
       setLoading(false);
       setShowSubscriptionSection(false);
       
+      const planName = planId === 'free' ? 'FREE' : planId;
+      const message = planId === 'free' 
+        ? 'Your FREE account has been activated. You can upload up to 10 tracks and access basic features.'
+        : `Your ${planName} subscription to SyncLab has been activated. Enjoy all the premium features!`;
+      
       Alert.alert(
-        "Subscription Activated",
-        `Your ${planId} subscription to SyncLab has been activated. Enjoy all the premium features!`,
+        planId === 'free' ? "FREE Account Activated" : "Subscription Activated",
+        message,
         [{ text: "OK" }]
       );
     }, 1500);
@@ -788,7 +805,7 @@ export default function SyncLabScreen() {
                 <ActivityIndicator size="small" color="#FFF" />
               ) : (
                 <Text style={styles.subscribeButtonText}>
-                  {selectedPlan === plan.id ? 'Subscribe' : 'Select'}
+                  {selectedPlan === plan.id ? (plan.id === 'free' ? 'Sign Up Free' : 'Subscribe') : 'Select'}
                 </Text>
               )}
             </TouchableOpacity>
