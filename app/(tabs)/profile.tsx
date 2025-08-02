@@ -97,9 +97,15 @@ export default function ProfileScreen() {
   // Filter liked tracks
   const likedTracksList = tracks.filter(track => likedTracks?.includes(track.id) || false);
   
-  // Filter user tracks (if logged in)
+  // Get uploaded tracks from player store
+  const { uploadedTracks, getUploadedTracks } = usePlayerStore();
+  
+  // Filter user tracks (if logged in) - combine mock tracks and uploaded tracks
   const userTracks = isLoggedIn && currentUser 
-    ? tracks.filter(track => track.artistId === currentUser.id)
+    ? [
+        ...uploadedTracks, // User's uploaded tracks from player store
+        ...tracks.filter(track => track.artistId === currentUser.id) // Mock tracks for demo user
+      ]
     : [];
   
   // Get followers and following users - with null checks
