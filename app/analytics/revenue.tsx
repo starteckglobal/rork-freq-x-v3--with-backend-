@@ -5,11 +5,30 @@ import {
   View,
   SafeAreaView,
   TouchableOpacity,
-  ScrollView
+  ScrollView,
+  Dimensions
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { ChevronLeft, DollarSign, TrendingUp, Calendar, Download } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+
+const { width: screenWidth } = Dimensions.get('window');
+
+// Responsive stat card width calculation
+const getStatCardWidth = () => {
+  const containerPadding = 32; // 16px on each side
+  const cardGap = 12;
+  const availableWidth = screenWidth - containerPadding;
+  
+  // For larger screens, use 3 columns; for smaller screens, use 2 columns
+  if (screenWidth >= 428) { // iPhone 14 Pro Max and larger
+    return (availableWidth - (cardGap * 2)) / 3; // 3 columns
+  } else if (screenWidth >= 375) { // iPhone standard and larger
+    return (availableWidth - cardGap) / 2; // 2 columns
+  } else { // Smaller screens
+    return availableWidth; // 1 column
+  }
+};
 
 export default function RevenueReportsScreen() {
   const router = useRouter();
@@ -249,8 +268,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cardElevated,
     padding: 16,
     borderRadius: 8,
-    flex: 1,
-    minWidth: '45%',
+    width: getStatCardWidth(),
+    minHeight: 100,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   statValue: {

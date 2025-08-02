@@ -10,6 +10,7 @@ import {
   Dimensions,
   Platform
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { 
   ChevronLeft, 
@@ -31,7 +32,35 @@ import { useUserStore } from '@/store/user-store';
 import { analytics } from '@/services/analytics';
 import { LineChart, BarChart as RNBarChart, PieChart } from 'react-native-chart-kit';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Responsive chart width calculation
+const getChartWidth = () => {
+  const horizontalPadding = 32; // 16px on each side
+  const safeWidth = screenWidth - horizontalPadding;
+  
+  // Ensure minimum width for readability and maximum for large screens
+  const minWidth = 280;
+  const maxWidth = 420;
+  
+  return Math.max(minWidth, Math.min(maxWidth, safeWidth));
+};
+
+// Responsive stat card width calculation
+const getStatCardWidth = () => {
+  const containerPadding = 32; // 16px on each side
+  const cardGap = 12;
+  const availableWidth = screenWidth - containerPadding;
+  
+  // For larger screens, use 3 columns; for smaller screens, use 2 columns
+  if (screenWidth >= 428) { // iPhone 14 Pro Max and larger
+    return (availableWidth - (cardGap * 2)) / 3; // 3 columns
+  } else if (screenWidth >= 375) { // iPhone standard and larger
+    return (availableWidth - cardGap) / 2; // 2 columns
+  } else { // Smaller screens
+    return availableWidth; // 1 column
+  }
+};
 
 // Mock data for charts
 const playbackData = {
@@ -82,6 +111,7 @@ const timeData = {
 export default function AnalyticsScreen() {
   const router = useRouter();
   const { isLoggedIn, currentUser } = useUserStore();
+  const insets = useSafeAreaInsets();
   
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -367,19 +397,21 @@ export default function AnalyticsScreen() {
                   <Text style={styles.chartPlaceholder}>Chart visualization available on mobile devices</Text>
                 </View>
               ) : (
-                <LineChart
-                  data={playbackData}
-                  width={width - 32}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={[styles.chart, { alignSelf: 'center' }]}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  withVerticalLabels={true}
-                  withHorizontalLabels={true}
-                  fromZero={true}
-                />
+                <View style={styles.chartWrapper}>
+                  <LineChart
+                    data={playbackData}
+                    width={getChartWidth()}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={true}
+                    fromZero={true}
+                  />
+                </View>
               )}
               
               <Text style={styles.sectionTitle}>Top Tracks</Text>
@@ -452,7 +484,7 @@ export default function AnalyticsScreen() {
                       legendFontColor: colors.text,
                       legendFontSize: 12,
                     }))}
-                    width={width - 32}
+                    width={getChartWidth()}
                     height={180}
                     chartConfig={pieChartConfig}
                     accessor="population"
@@ -469,29 +501,31 @@ export default function AnalyticsScreen() {
                   <Text style={styles.chartPlaceholder}>Chart visualization available on mobile devices</Text>
                 </View>
               ) : (
-                <LineChart
-                  data={{
-                    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-                    datasets: [
-                      {
-                        data: [20, 45, 28, 80, 99, 120],
-                        color: (opacity = 1) => `rgba(65, 105, 225, ${opacity})`,
-                        strokeWidth: 2
-                      }
-                    ],
-                    legend: ["Monthly Listeners"]
-                  }}
-                  width={width - 32}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={[styles.chart, { alignSelf: 'center' }]}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  withVerticalLabels={true}
-                  withHorizontalLabels={true}
-                  fromZero={true}
-                />
+                <View style={styles.chartWrapper}>
+                  <LineChart
+                    data={{
+                      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                      datasets: [
+                        {
+                          data: [20, 45, 28, 80, 99, 120],
+                          color: (opacity = 1) => `rgba(65, 105, 225, ${opacity})`,
+                          strokeWidth: 2
+                        }
+                      ],
+                      legend: ["Monthly Listeners"]
+                    }}
+                    width={getChartWidth()}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={true}
+                    fromZero={true}
+                  />
+                </View>
               )}
             </View>
           )}
@@ -528,26 +562,28 @@ export default function AnalyticsScreen() {
                   <Text style={styles.chartPlaceholder}>Chart visualization available on mobile devices</Text>
                 </View>
               ) : (
-                <RNBarChart
-                  data={{
-                    labels: engagementData.labels,
-                    datasets: [
-                      {
-                        data: engagementData.data
-                      }
-                    ]
-                  }}
-                  width={width - 32}
-                  height={220}
-                  yAxisLabel=""
-                  yAxisSuffix=""
-                  chartConfig={chartConfig}
-                  verticalLabelRotation={30}
-                  style={[styles.chart, { alignSelf: 'center' }]}
-                  withInnerLines={false}
-                  withHorizontalLabels={false}
-                  fromZero={true}
-                />
+                <View style={styles.chartWrapper}>
+                  <RNBarChart
+                    data={{
+                      labels: engagementData.labels,
+                      datasets: [
+                        {
+                          data: engagementData.data
+                        }
+                      ]
+                    }}
+                    width={getChartWidth()}
+                    height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    chartConfig={chartConfig}
+                    verticalLabelRotation={30}
+                    style={styles.chart}
+                    withInnerLines={false}
+                    withHorizontalLabels={false}
+                    fromZero={true}
+                  />
+                </View>
               )}
               
               <Text style={styles.sectionTitle}>Top Engagement Sources</Text>
@@ -597,7 +633,7 @@ export default function AnalyticsScreen() {
                     legendFontColor: colors.text,
                     legendFontSize: 12,
                   }))}
-                  width={width - 32}
+                  width={getChartWidth()}
                   height={220}
                   chartConfig={pieChartConfig}
                   accessor="population"
@@ -652,19 +688,21 @@ export default function AnalyticsScreen() {
                   <Text style={styles.chartPlaceholder}>Chart visualization available on mobile devices</Text>
                 </View>
               ) : (
-                <LineChart
-                  data={timeData}
-                  width={width - 32}
-                  height={220}
-                  chartConfig={chartConfig}
-                  bezier
-                  style={[styles.chart, { alignSelf: 'center' }]}
-                  withInnerLines={false}
-                  withOuterLines={false}
-                  withVerticalLabels={true}
-                  withHorizontalLabels={true}
-                  fromZero={true}
-                />
+                <View style={styles.chartWrapper}>
+                  <LineChart
+                    data={timeData}
+                    width={getChartWidth()}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                    withInnerLines={false}
+                    withOuterLines={false}
+                    withVerticalLabels={true}
+                    withHorizontalLabels={true}
+                    fromZero={true}
+                  />
+                </View>
               )}
               
               <Text style={styles.sectionTitle}>Top Days of Week</Text>
@@ -673,25 +711,27 @@ export default function AnalyticsScreen() {
                   <Text style={styles.chartPlaceholder}>Chart visualization available on mobile devices</Text>
                 </View>
               ) : (
-                <RNBarChart
-                  data={{
-                    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                    datasets: [
-                      {
-                        data: [65, 59, 80, 81, 90, 100, 70]
-                      }
-                    ]
-                  }}
-                  width={width - 32}
-                  height={220}
-                  yAxisLabel=""
-                  yAxisSuffix=""
-                  chartConfig={chartConfig}
-                  style={[styles.chart, { alignSelf: 'center' }]}
-                  withInnerLines={false}
-                  withHorizontalLabels={false}
-                  fromZero={true}
-                />
+                <View style={styles.chartWrapper}>
+                  <RNBarChart
+                    data={{
+                      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                      datasets: [
+                        {
+                          data: [65, 59, 80, 81, 90, 100, 70]
+                        }
+                      ]
+                    }}
+                    width={getChartWidth()}
+                    height={220}
+                    yAxisLabel=""
+                    yAxisSuffix=""
+                    chartConfig={chartConfig}
+                    style={styles.chart}
+                    withInnerLines={false}
+                    withHorizontalLabels={false}
+                    fromZero={true}
+                  />
+                </View>
               )}
               
               <Text style={styles.sectionTitle}>Seasonal Trends</Text>
@@ -844,13 +884,23 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 24,
+    gap: 12,
   },
   statCard: {
-    width: '48%',
+    width: getStatCardWidth(),
     backgroundColor: colors.card,
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
+    minHeight: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    width: '100%',
   },
   statValue: {
     fontSize: 24,
@@ -879,8 +929,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   chart: {
-    marginBottom: 24,
     borderRadius: 8,
+    alignSelf: 'center',
   },
   chartPlaceholder: {
     color: colors.textSecondary,
@@ -891,6 +941,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    width: '100%',
+    overflow: 'hidden',
   },
   trackList: {
     backgroundColor: colors.card,
