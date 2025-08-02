@@ -22,7 +22,8 @@ import {
   Heart,
   MoreVertical,
   Filter,
-  Crown
+  Crown,
+  X
 } from 'lucide-react-native';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { BSideTrack, useBSidesStore } from '@/store/bsides-store';
@@ -252,6 +253,14 @@ export default function BSidesManagement({
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')} 
+              style={styles.clearSearchButton}
+            >
+              <X size={16} color={themeColors.textSecondary} />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.filtersRow}>
@@ -557,11 +566,25 @@ const createStyles = (themeColors: any) => StyleSheet.create({
     paddingVertical: 8,
     marginBottom: 12,
     gap: 8,
+    position: 'relative',
   },
   searchInput: {
     flex: 1,
     color: themeColors.text,
     fontSize: 16,
+    paddingRight: 30,
+  },
+  clearSearchButton: {
+    position: 'absolute',
+    right: 8,
+    top: '50%',
+    width: 24,
+    height: 24,
+    marginTop: -12,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   filtersRow: {
     flexDirection: 'row',

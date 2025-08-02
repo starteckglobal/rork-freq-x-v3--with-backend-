@@ -18,7 +18,8 @@ import {
   Plus, 
   ChevronLeft,
   MessageCircle,
-  Bell
+  Bell,
+  X
 } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import { users } from '@/mocks/users';
@@ -303,6 +304,14 @@ export default function MessagesScreen() {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity 
+              onPress={() => setSearchQuery('')} 
+              style={styles.clearSearchButton}
+            >
+              <X size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
         </View>
         
         <View style={styles.tabsContainer}>
@@ -424,12 +433,26 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 12,
     borderRadius: 8,
+    position: 'relative',
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
     color: colors.text,
     fontSize: 16,
+    paddingRight: 40,
+  },
+  clearSearchButton: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    width: 30,
+    height: 30,
+    marginTop: -15,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tabsContainer: {
     flexDirection: 'row',
